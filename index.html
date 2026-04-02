@@ -240,6 +240,36 @@
             </div>
         </div>
 
+        <!-- Advanced Performance Section (NEW) -->
+        <div class="mt-6">
+            <div class="flex justify-between items-center px-2 mb-3 cursor-pointer hover:bg-slate-200/50 p-2 -mx-2 rounded-lg transition-colors" onclick="toggleSection('wrapper-advanced', 'icon-advanced')">
+                <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2"><span class="text-xl">🚀</span> ประสิทธิภาพเชิงลึก (Advanced Performance)</h3>
+                <svg id="icon-advanced" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+            <div id="wrapper-advanced" class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 relative z-10">
+                <!-- Throughput Chart -->
+                <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-800">อัตราความเร็วในการผลิต (Throughput)</h3>
+                        <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">KG / ชั่วโมง</span>
+                    </div>
+                    <div class="relative h-72 w-full">
+                        <canvas id="throughputChart"></canvas>
+                    </div>
+                </div>
+                <!-- Yield Chart -->
+                <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-800">อัตราความแม่นยำของผลผลิต (Yield %)</h3>
+                        <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">Actual vs Order</span>
+                    </div>
+                    <div class="relative h-72 w-full">
+                        <canvas id="yieldChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Washing Media Usage Section -->
         <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100 relative z-20 mt-6">
             <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3 cursor-pointer hover:opacity-70 transition-opacity" onclick="toggleSection('wrapper-media', 'icon-media')">
@@ -315,6 +345,7 @@
             <div id="wrapper-orderqty" class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100 relative z-10">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-bold text-slate-800">ปริมาณออเดอร์สะสมแยกตามไลน์ (Stacked Order QTY Trend)</h3>
+                    <!-- 💡 แก้ไขหน่วยเป็น x 1,000 -->
                     <span class="text-xs font-semibold text-white bg-blue-500 px-3 py-1 rounded-full shadow-sm">หน่วย: x 1,000 | โหมด: <span id="orderTrendModeLabel">อัตโนมัติ</span></span>
                 </div>
                 <div class="relative h-80 w-full">
@@ -435,6 +466,18 @@
         Chart.defaults.color = '#64748b';
 
         // ==========================================
+        // ประกาศตัวแปรกราฟทั้งหมดไว้ล่วงหน้า (ป้องกัน ReferenceError)
+        // ==========================================
+        let machineChartInstance = null;
+        let orderQtyChartInstance = null;
+        let batchCapChartInstance = null;
+        let throughputChartInstance = null;
+        let yieldChartInstance = null;
+        let statusChartInstance = null;
+        let groupChartInstance = null;
+        let trendChartInstance = null;
+
+        // ==========================================
         // 💡 ตั้งค่า Master Data 
         // ==========================================
         const MAC_STD_BATCH_CAP = {
@@ -475,306 +518,361 @@
             return MAC_TO_LINE[mac] || 'อื่นๆ (Other)';
         }
 
-        // 1. Bar Chart: Production by Machine
-        const ctxMachine = document.getElementById('machineChart').getContext('2d');
-        let machineChartInstance = new Chart(ctxMachine, {
-            type: 'bar',
-            data: {
-                labels: [],
-                datasets: [
-                    {
-                        type: 'bar',
-                        label: 'ยอดผลิตจริง (Actual QTY)',
-                        data: [],
-                        backgroundColor: 'rgba(59, 130, 246, 0.8)', 
-                        hoverBackgroundColor: 'rgba(37, 99, 235, 1)', 
-                        borderRadius: 4,
-                        barThickness: 32,
-                        order: 2
-                    },
-                    {
-                        type: 'line',
-                        label: 'กำลังผลิตสูงสุด (Max Capacity)',
-                        data: [],
-                        borderColor: 'rgba(239, 68, 68, 1)', 
-                        backgroundColor: 'rgba(239, 68, 68, 1)',
-                        borderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        fill: false,
-                        borderDash: [5, 5],
-                        order: 1
-                    }
-                ]
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { 
-                        display: true,
-                        position: 'top',
-                        labels: { font: { family: "'Sarabun', sans-serif", size: 12 } }
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                        padding: 12,
-                        titleFont: { size: 14, family: "'Sarabun', sans-serif" },
-                        bodyFont: { size: 13, family: "'Sarabun', sans-serif" },
-                        callbacks: {
-                            label: function(context) {
-                                return ` ${context.dataset.label}: ${context.parsed.y.toLocaleString()} KG`;
-                            },
-                            afterLabel: function(context) {
-                                const actual = context.chart.data.datasets[0].data[context.dataIndex] || 0;
-                                const cap = context.chart.data.datasets[1].data[context.dataIndex] || 0;
-                                
-                                if (cap > 0 && context.datasetIndex === 0) { 
-                                    const diff = cap - actual;
-                                    const percent = ((actual / cap) * 100).toFixed(1);
-                                    const diffPercent = Math.abs((diff / cap) * 100).toFixed(1);
+        // --- Initialize Charts Safely ---
+        const elMachine = document.getElementById('machineChart');
+        if (elMachine) {
+            machineChartInstance = new Chart(elMachine.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            type: 'bar',
+                            label: 'ยอดผลิตจริง (Actual QTY)',
+                            data: [],
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)', 
+                            hoverBackgroundColor: 'rgba(37, 99, 235, 1)', 
+                            borderRadius: 4,
+                            barThickness: 32,
+                            order: 2
+                        },
+                        {
+                            type: 'line',
+                            label: 'กำลังผลิตสูงสุด (Max Capacity)',
+                            data: [],
+                            borderColor: 'rgba(239, 68, 68, 1)', 
+                            backgroundColor: 'rgba(239, 68, 68, 1)',
+                            borderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            fill: false,
+                            borderDash: [5, 5],
+                            order: 1
+                        }
+                    ]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            display: true,
+                            position: 'top',
+                            labels: { font: { family: "'Sarabun', sans-serif", size: 12 } }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            padding: 12,
+                            titleFont: { size: 14, family: "'Sarabun', sans-serif" },
+                            bodyFont: { size: 13, family: "'Sarabun', sans-serif" },
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.dataset.label}: ${context.parsed.y.toLocaleString()} KG`;
+                                },
+                                afterLabel: function(context) {
+                                    const actual = context.chart.data.datasets[0].data[context.dataIndex] || 0;
+                                    const cap = context.chart.data.datasets[1].data[context.dataIndex] || 0;
                                     
-                                    let lines = [];
-                                    lines.push(` ----------------------------------`);
-                                    lines.push(` 📊 ประสิทธิภาพ (Efficiency): ${percent}%`);
-                                    
-                                    if (diff > 0) {
-                                        lines.push(` 📉 ส่วนต่าง: ต่ำกว่าเป้า ${diff.toLocaleString()} KG (${diffPercent}%)`);
-                                    } else if (diff < 0) {
-                                        lines.push(` 📈 ส่วนต่าง: ทะลุเป้า ${Math.abs(diff).toLocaleString()} KG (+${diffPercent}%)`);
-                                    } else {
-                                        lines.push(` ✅ ส่วนต่าง: พอดีเป้าหมาย (0%)`);
+                                    if (cap > 0 && context.datasetIndex === 0) { 
+                                        const diff = cap - actual;
+                                        const percent = ((actual / cap) * 100).toFixed(1);
+                                        const diffPercent = Math.abs((diff / cap) * 100).toFixed(1);
+                                        
+                                        let lines = [];
+                                        lines.push(` ----------------------------------`);
+                                        lines.push(` 📊 ประสิทธิภาพ (Efficiency): ${percent}%`);
+                                        
+                                        if (diff > 0) {
+                                            lines.push(` 📉 ส่วนต่าง: ต่ำกว่าเป้า ${diff.toLocaleString()} KG (${diffPercent}%)`);
+                                        } else if (diff < 0) {
+                                            lines.push(` 📈 ส่วนต่าง: ทะลุเป้า ${Math.abs(diff).toLocaleString()} KG (+${diffPercent}%)`);
+                                        } else {
+                                            lines.push(` ✅ ส่วนต่าง: พอดีเป้าหมาย (0%)`);
+                                        }
+                                        return lines;
                                     }
-                                    return lines;
+                                    return null;
                                 }
-                                return null;
                             }
                         }
-                    }
-                },
-                scales: { 
-                    y: { 
-                        beginAtZero: true,
-                        grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false }
                     },
-                    x: {
-                        grid: { display: false, drawBorder: false }
-                    }
-                } 
-            }
-        });
+                    scales: { 
+                        y: { 
+                            beginAtZero: true,
+                            grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false }
+                        },
+                        x: {
+                            grid: { display: false, drawBorder: false }
+                        }
+                    } 
+                }
+            });
+        }
 
-        // 1.2 Stacked Bar Chart: Order QTY by Line 
-        const ctxOrderQty = document.getElementById('orderQtyChart').getContext('2d');
-        let orderQtyChartInstance = new Chart(ctxOrderQty, {
-            type: 'bar',
-            data: { labels: [], datasets: [] },
-            options: {
-                responsive: true, 
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { 
-                        display: true, 
-                        position: 'top', 
-                        labels: { font: { family: "'Sarabun', sans-serif", size: 11 }, usePointStyle: true, boxWidth: 8 } 
+        const elOrderQty = document.getElementById('orderQtyChart');
+        if (elOrderQty) {
+            orderQtyChartInstance = new Chart(elOrderQty.getContext('2d'), {
+                type: 'bar',
+                data: { labels: [], datasets: [] },
+                options: {
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            display: true, 
+                            position: 'top', 
+                            labels: { font: { family: "'Sarabun', sans-serif", size: 11 }, usePointStyle: true, boxWidth: 8 } 
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)', 
+                            padding: 12,
+                            titleFont: { size: 14, family: "'Sarabun', sans-serif" }, 
+                            bodyFont: { size: 13, family: "'Sarabun', sans-serif" },
+                            callbacks: {
+                                label: function(context) { 
+                                    return ` ${context.dataset.label}: ${context.parsed.y.toLocaleString()} (x 1,000)`; 
+                                }
+                            }
+                        }
                     },
-                    tooltip: {
+                    scales: {
+                        x: { 
+                            stacked: true, 
+                            grid: { display: false, drawBorder: false } 
+                        },
+                        y: { 
+                            stacked: true, 
+                            beginAtZero: true, 
+                            grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false }, 
+                            title: { display: true, text: 'ปริมาณ (x 1,000)', font: { family: "'Sarabun', sans-serif" } } 
+                        }
+                    }
+                }
+            });
+        }
+
+        const elBatchCap = document.getElementById('batchCapChart');
+        if (elBatchCap) {
+            batchCapChartInstance = new Chart(elBatchCap.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: []
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    interaction: {
                         mode: 'index',
-                        intersect: false,
-                        backgroundColor: 'rgba(15, 23, 42, 0.9)', 
-                        padding: 12,
-                        titleFont: { size: 14, family: "'Sarabun', sans-serif" }, 
-                        bodyFont: { size: 13, family: "'Sarabun', sans-serif" },
-                        callbacks: {
-                            label: function(context) { 
-                                return ` ${context.dataset.label}: ${context.parsed.y.toLocaleString()} (x 1,000)`; 
+                        intersect: false, 
+                    },
+                    plugins: {
+                        legend: { 
+                            display: true,
+                            position: 'top',
+                            labels: { font: { family: "'Sarabun', sans-serif", size: 11 }, usePointStyle: true, boxWidth: 8 }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            padding: 12,
+                            titleFont: { size: 14, family: "'Sarabun', sans-serif" },
+                            bodyFont: { size: 13, family: "'Sarabun', sans-serif" },
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.dataset.label}: ${context.parsed.y}%`;
+                                }
                             }
                         }
-                    }
-                },
-                scales: {
-                    x: { 
-                        stacked: true, 
-                        grid: { display: false, drawBorder: false } 
                     },
-                    y: { 
-                        stacked: true, 
-                        beginAtZero: true, 
-                        grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false }, 
-                        title: { display: true, text: 'ปริมาณ (x 1,000)', font: { family: "'Sarabun', sans-serif" } } 
+                    scales: { 
+                        y: { 
+                            beginAtZero: true,
+                            max: 150, 
+                            grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false },
+                            title: { display: true, text: 'ประสิทธิภาพ (%)', font: { family: "'Sarabun', sans-serif" } }
+                        },
+                        x: {
+                            grid: { display: false, drawBorder: false }
+                        }
+                    } 
+                }
+            });
+        }
+
+        const elThroughput = document.getElementById('throughputChart');
+        if (elThroughput) {
+            throughputChartInstance = new Chart(elThroughput.getContext('2d'), {
+                type: 'bar',
+                data: { labels: [], datasets: [] },
+                options: { 
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12,
+                            titleFont: { size: 14, family: "'Sarabun', sans-serif" },
+                            bodyFont: { size: 13, family: "'Sarabun', sans-serif" },
+                            callbacks: { label: function(context) { return ` ความเร็ว: ${context.parsed.y.toLocaleString()} KG/Hr`; } }
+                        }
+                    },
+                    scales: { 
+                        y: { beginAtZero: true, grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false } },
+                        x: { grid: { display: false, drawBorder: false } }
+                    } 
+                }
+            });
+        }
+
+        const elYield = document.getElementById('yieldChart');
+        if (elYield) {
+            yieldChartInstance = new Chart(elYield.getContext('2d'), {
+                type: 'bar',
+                data: { labels: [], datasets: [] },
+                options: { 
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12,
+                            titleFont: { size: 14, family: "'Sarabun', sans-serif" },
+                            bodyFont: { size: 13, family: "'Sarabun', sans-serif" },
+                            callbacks: { label: function(context) { return ` Yield: ${context.parsed.y}%`; } }
+                        }
+                    },
+                    scales: { 
+                        y: { beginAtZero: true, grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false } },
+                        x: { grid: { display: false, drawBorder: false } }
+                    } 
+                }
+            });
+        }
+
+        const elStatus = document.getElementById('statusChart');
+        if (elStatus) {
+            statusChartInstance = new Chart(elStatus.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Completed', 'Abort', 'Reserved'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: [
+                            'rgba(52, 211, 153, 0.9)', 
+                            'rgba(251, 113, 133, 0.9)', 
+                            'rgba(251, 191, 36, 0.9)'   
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            padding: 12,
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 },
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
 
-        // 1.5 Line Chart: Batch Capacity Comparison Trend 
-        const ctxBatchCap = document.getElementById('batchCapChart').getContext('2d');
-        let batchCapChartInstance = new Chart(ctxBatchCap, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: []
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false, 
+        const elGroup = document.getElementById('groupChart');
+        if (elGroup) {
+            groupChartInstance = new Chart(elGroup.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Batch Count',
+                        data: [],
+                        backgroundColor: 'rgba(245, 158, 11, 0.8)', 
+                        hoverBackgroundColor: 'rgba(217, 119, 6, 1)', 
+                        borderRadius: 6,
+                        borderSkipped: false,
+                        barThickness: 20
+                    }]
                 },
-                plugins: {
-                    legend: { 
-                        display: true,
-                        position: 'top',
-                        labels: { font: { family: "'Sarabun', sans-serif", size: 11 }, usePointStyle: true, boxWidth: 8 }
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                        padding: 12,
-                        titleFont: { size: 14, family: "'Sarabun', sans-serif" },
-                        bodyFont: { size: 13, family: "'Sarabun', sans-serif" },
-                        callbacks: {
-                            label: function(context) {
-                                return ` ${context.dataset.label}: ${context.parsed.y}%`;
+                options: { 
+                    indexAxis: 'y', 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            padding: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    return ' จำนวน: ' + context.parsed.x + ' แบทช์';
+                                }
                             }
                         }
-                    }
-                },
-                scales: { 
-                    y: { 
-                        beginAtZero: true,
-                        max: 150, 
-                        grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false },
-                        title: { display: true, text: 'ประสิทธิภาพ (%)', font: { family: "'Sarabun', sans-serif" } }
                     },
-                    x: {
-                        grid: { display: false, drawBorder: false }
-                    }
-                } 
-            }
-        });
-
-        // 2. Doughnut Chart: Status
-        const ctxStatus = document.getElementById('statusChart').getContext('2d');
-        let statusChartInstance = new Chart(ctxStatus, {
-            type: 'doughnut',
-            data: {
-                labels: ['Completed', 'Abort', 'Reserved'],
-                datasets: [{
-                    data: [0, 0, 0],
-                    backgroundColor: [
-                        'rgba(52, 211, 153, 0.9)', 
-                        'rgba(251, 113, 133, 0.9)', 
-                        'rgba(251, 191, 36, 0.9)'   
-                    ],
-                    borderWidth: 0,
-                    hoverOffset: 4
-                }]
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false,
-                cutout: '75%',
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                        padding: 12,
-                        titleFont: { size: 14 },
-                        bodyFont: { size: 13 },
-                    }
+                    scales: { 
+                        x: { 
+                            beginAtZero: true,
+                            grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false }
+                        },
+                        y: {
+                            grid: { display: false, drawBorder: false }
+                        }
+                    } 
                 }
-            }
-        });
+            });
+        }
 
-        // 3. Horizontal Bar: Product Group
-        const ctxGroup = document.getElementById('groupChart').getContext('2d');
-        let groupChartInstance = new Chart(ctxGroup, {
-            type: 'bar',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'Batch Count',
-                    data: [],
-                    backgroundColor: 'rgba(245, 158, 11, 0.8)', 
-                    hoverBackgroundColor: 'rgba(217, 119, 6, 1)', 
-                    borderRadius: 6,
-                    borderSkipped: false,
-                    barThickness: 20
-                }]
-            },
-            options: { 
-                indexAxis: 'y', 
-                responsive: true, 
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                        padding: 12,
-                        callbacks: {
-                            label: function(context) {
-                                return ' จำนวน: ' + context.parsed.x + ' แบทช์';
+        const elTrend = document.getElementById('trendChart');
+        if (elTrend) {
+            trendChartInstance = new Chart(elTrend.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'ยอดผลิต (QTY)',
+                        data: [],
+                        backgroundColor: 'rgba(14, 165, 233, 0.8)', 
+                        hoverBackgroundColor: 'rgba(2, 132, 199, 1)', 
+                        borderRadius: 4,
+                        barThickness: 'flex',
+                        maxBarThickness: 40
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            padding: 12,
+                            titleFont: { size: 14, family: "'Sarabun', sans-serif" },
+                            bodyFont: { size: 13, family: "'Sarabun', sans-serif" },
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ยอดผลิต: ${context.parsed.y.toLocaleString()} KG`;
+                                }
                             }
                         }
-                    }
-                },
-                scales: { 
-                    x: { 
-                        beginAtZero: true,
-                        grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false }
                     },
-                    y: {
-                        grid: { display: false, drawBorder: false }
-                    }
-                } 
-            }
-        });
-
-        // 4. Bar Chart: Daily Trend
-        const ctxTrend = document.getElementById('trendChart').getContext('2d');
-        let trendChartInstance = new Chart(ctxTrend, {
-            type: 'bar',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'ยอดผลิต (QTY)',
-                    data: [],
-                    backgroundColor: 'rgba(14, 165, 233, 0.8)', 
-                    hoverBackgroundColor: 'rgba(2, 132, 199, 1)', 
-                    borderRadius: 4,
-                    barThickness: 'flex',
-                    maxBarThickness: 40
-                }]
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                        padding: 12,
-                        titleFont: { size: 14, family: "'Sarabun', sans-serif" },
-                        bodyFont: { size: 13, family: "'Sarabun', sans-serif" },
-                        callbacks: {
-                            label: function(context) {
-                                return ` ยอดผลิต: ${context.parsed.y.toLocaleString()} KG`;
-                            }
+                    scales: { 
+                        y: { 
+                            beginAtZero: true,
+                            grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false }
+                        },
+                        x: {
+                            grid: { display: false, drawBorder: false }
                         }
-                    }
-                },
-                scales: { 
-                    y: { 
-                        beginAtZero: true,
-                        grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false }
-                    },
-                    x: {
-                        grid: { display: false, drawBorder: false }
-                    }
-                } 
-            }
-        });
+                    } 
+                }
+            });
+        }
 
         // --- ฟังก์ชันช่วยต่างๆ ---
         function extractDateParts(dateString) {
@@ -871,6 +969,7 @@
         let filterInstances = {};
 
         function initFilters() {
+            // เพิ่ม filterLine เข้าไปใน Array
             const filterIds = ['filterYear', 'filterMonth', 'filterDay', 'filterLine', 'filterMac', 'filterClass', 'filterGroup'];
             
             filterIds.forEach(id => {
@@ -912,6 +1011,7 @@
                 const macVal = getColValue(row, 'MAC') != null ? String(getColValue(row, 'MAC')).trim() : '';
                 if (macVal) {
                     macs.add(macVal);
+                    // หา Line จาก Mac เพื่อใส่ใน Slicer
                     const lineVal = getLineFromMac(macVal);
                     if (lineVal) lines.add(lineVal);
                 }
@@ -977,7 +1077,7 @@
                 
                 const dateVal = getColValue(row, 'PRODUCTION_DATE') != null ? getColValue(row, 'PRODUCTION_DATE') : '';
                 const macVal = getColValue(row, 'MAC') != null ? String(getColValue(row, 'MAC')).trim() : '';
-                const lineVal = getLineFromMac(macVal); 
+                const lineVal = getLineFromMac(macVal); // คำนวณ Line สำหรับเช็คเงื่อนไข
                 const classVal = getColValue(row, 'CLASS') != null ? String(getColValue(row, 'CLASS')).trim() : '';
                 const rawItemCode = getColValue(row, 'ITEM CODE') || getColValue(row, 'ITEM_CODE');
                 const itemVal = rawItemCode != null ? String(rawItemCode) : '';
@@ -995,7 +1095,7 @@
                 if (!checkMatch(fYearArr, rowYear)) match = false;
                 if (!checkMatch(fMonthArr, rowMonth)) match = false;
                 if (!checkMatch(fDayArr, rowDay)) match = false;
-                if (!checkMatch(fLineArr, lineVal)) match = false; 
+                if (!checkMatch(fLineArr, lineVal)) match = false; // เช็ค Filter Line
                 if (!checkMatch(fMacArr, macVal)) match = false;
                 if (!checkMatch(fClassArr, classVal)) match = false;
                 if (!checkMatch(fGroupArr, groupVal)) match = false;
@@ -1042,6 +1142,10 @@
             
             const orderTrendDict = {}; 
             const activeLinesForOrder = new Set();
+
+            // 💡 ตัวแปรสำหรับเก็บข้อมูล Throughput & Yield
+            const macThroughputData = {};
+            const macYieldData = {};
 
             filteredData.forEach(row => {
                 const dateVal = getColValue(row, 'PRODUCTION_DATE') || '';
@@ -1137,6 +1241,21 @@
                     if (!isNaN(parsedTime) && parsedTime > 0) { 
                         time = parsedTime;
                         hasValidTime = true;
+                    }
+                }
+
+                // 💡 สะสมข้อมูล Throughput & Yield ในแต่ละลูป
+                if (macVal) {
+                    const macKey = String(macVal).trim();
+                    if (hasValidTime) {
+                        if (!macThroughputData[macKey]) macThroughputData[macKey] = { totalQty: 0, totalTime: 0 };
+                        macThroughputData[macKey].totalQty += qty;
+                        macThroughputData[macKey].totalTime += time;
+                    }
+                    if (qtyOrder > 0) {
+                        if (!macYieldData[macKey]) macYieldData[macKey] = { totalProd: 0, totalOrder: 0 };
+                        macYieldData[macKey].totalProd += qty;
+                        macYieldData[macKey].totalOrder += qtyOrder;
                     }
                 }
 
@@ -1378,7 +1497,7 @@
                 statusContainer.innerHTML = htmlContent;
             }
 
-            if(machineChartInstance) {
+            if (machineChartInstance) {
                 const sortedMacs = Object.keys(macDict).sort((a,b) => macDict[b] - macDict[a]).slice(0, 7);
                 const actualData = sortedMacs.map(mac => macDict[mac]);
                 const capData = sortedMacs.map(mac => {
@@ -1393,7 +1512,7 @@
                 machineChartInstance.update();
             }
 
-            if(orderQtyChartInstance) {
+            if (orderQtyChartInstance) {
                 const sortedBuckets = Object.keys(orderTrendDict).sort();
                 const labels = sortedBuckets.map(k => orderTrendDict[k].label);
                 
@@ -1428,7 +1547,7 @@
                 orderQtyChartInstance.update();
             }
 
-            if(batchCapChartInstance) {
+            if (batchCapChartInstance) {
                 const sortedDates = Object.keys(batchCapTrendDict).sort(); 
                 const displayDates = sortedDates.map(d => {
                     const parts = d.split('-');
@@ -1470,19 +1589,76 @@
                 batchCapChartInstance.update();
             }
 
-            if(statusChartInstance) {
+            // 💡 อัปเดตกราฟ Throughput
+            if (throughputChartInstance) {
+                const sortedMacsTP = Object.keys(macThroughputData).sort((a,b) => {
+                    const tpA = macThroughputData[a].totalQty / (macThroughputData[a].totalTime / 60);
+                    const tpB = macThroughputData[b].totalQty / (macThroughputData[b].totalTime / 60);
+                    return tpB - tpA;
+                });
+                
+                const tpData = sortedMacsTP.map(mac => {
+                    const hrs = macThroughputData[mac].totalTime / 60;
+                    return hrs > 0 ? Math.round(macThroughputData[mac].totalQty / hrs) : 0;
+                });
+
+                throughputChartInstance.data.labels = sortedMacsTP;
+                throughputChartInstance.data.datasets = [{
+                    label: 'KG/Hr',
+                    data: tpData,
+                    backgroundColor: 'rgba(16, 185, 129, 0.8)', 
+                    hoverBackgroundColor: 'rgba(5, 150, 105, 1)', 
+                    borderRadius: 4
+                }];
+                throughputChartInstance.update();
+            }
+
+            // 💡 อัปเดตกราฟ Yield %
+            if (yieldChartInstance) {
+                const sortedMacsY = Object.keys(macYieldData).sort((a,b) => {
+                    const yA = (macYieldData[a].totalProd / macYieldData[a].totalOrder) * 100;
+                    const yB = (macYieldData[b].totalProd / macYieldData[b].totalOrder) * 100;
+                    return yB - yA;
+                });
+                
+                const yData = sortedMacsY.map(mac => {
+                    const pct = (macYieldData[mac].totalProd / macYieldData[mac].totalOrder) * 100;
+                    return Number(pct.toFixed(1));
+                });
+                
+                const yColors = yData.map(val => {
+                    if (val > 105 || val < 95) return 'rgba(245, 158, 11, 0.8)';
+                    return 'rgba(59, 130, 246, 0.8)';
+                });
+                const yHoverColors = yData.map(val => {
+                    if (val > 105 || val < 95) return 'rgba(217, 119, 6, 1)'; 
+                    return 'rgba(37, 99, 235, 1)';
+                });
+
+                yieldChartInstance.data.labels = sortedMacsY;
+                yieldChartInstance.data.datasets = [{
+                    label: 'Yield %',
+                    data: yData,
+                    backgroundColor: yColors,
+                    hoverBackgroundColor: yHoverColors,
+                    borderRadius: 4
+                }];
+                yieldChartInstance.update();
+            }
+
+            if (statusChartInstance) {
                 statusChartInstance.data.datasets[0].data = [completedCount, abortCount, reservedCount];
                 statusChartInstance.update();
             }
 
-            if(groupChartInstance) {
+            if (groupChartInstance) {
                 const sortedGroups = Object.keys(groupDict).sort((a,b) => groupDict[b] - groupDict[a]).slice(0, 6);
                 groupChartInstance.data.labels = sortedGroups;
                 groupChartInstance.data.datasets[0].data = sortedGroups.map(grp => groupDict[grp]);
                 groupChartInstance.update();
             }
 
-            if(trendChartInstance) {
+            if (trendChartInstance) {
                 const sortedDates = Object.keys(trendDict).sort(); 
                 const displayDates = sortedDates.map(d => {
                     const parts = d.split('-');
@@ -1539,9 +1715,6 @@
             updateDashboard();
         }
 
-        // ========================================================
-        // การแจ้งเตือน & อัปโหลด
-        // ========================================================
         function showAlert(title, message, type = 'info') {
             const modal = document.getElementById('alertModal');
             document.getElementById('alertTitle').innerText = title;
@@ -1585,4 +1758,4 @@
         updateDashboard();
     </script>
 </body>
-</html>
+                </html>
