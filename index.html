@@ -204,14 +204,14 @@
             </div>
         </div>
 
-        <!-- Machine Utilization Section -->
+        <!-- Machine Utilization Section (True OEE Context) -->
         <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100 relative z-20 mt-6">
             <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3 cursor-pointer hover:opacity-70 transition-opacity" onclick="toggleSection('wrapper-macutil', 'icon-macutil')">
                 <div class="flex items-center gap-2">
                     <h3 class="font-bold text-slate-800 flex items-center gap-2">
-                        <span class="text-xl">⏱️</span> เวลาเฉลี่ยการทำงานของเครื่องจักรรายวัน (Machine Time Utilization)
+                        <span class="text-xl">⏱️</span> อัตราการใช้ประโยชน์เครื่องจักร (True Machine Utilization)
                     </h3>
-                    <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">เทียบกับ 480 นาที/วัน</span>
+                    <span id="factoryTimeLabel" class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">กำลังประมวลผลวันทำงานจริง...</span>
                 </div>
                 <svg id="icon-macutil" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             </div>
@@ -240,7 +240,7 @@
             </div>
         </div>
 
-        <!-- Advanced Performance Section (NEW) -->
+        <!-- Advanced Performance Section -->
         <div class="mt-6">
             <div class="flex justify-between items-center px-2 mb-3 cursor-pointer hover:bg-slate-200/50 p-2 -mx-2 rounded-lg transition-colors" onclick="toggleSection('wrapper-advanced', 'icon-advanced')">
                 <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2"><span class="text-xl">🚀</span> ประสิทธิภาพเชิงลึก (Advanced Performance)</h3>
@@ -345,7 +345,6 @@
             <div id="wrapper-orderqty" class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100 relative z-10">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-bold text-slate-800">ปริมาณออเดอร์สะสมแยกตามไลน์ (Stacked Order QTY Trend)</h3>
-                    <!-- 💡 แก้ไขหน่วยเป็น x 1,000 -->
                     <span class="text-xs font-semibold text-white bg-blue-500 px-3 py-1 rounded-full shadow-sm">หน่วย: x 1,000 | โหมด: <span id="orderTrendModeLabel">อัตโนมัติ</span></span>
                 </div>
                 <div class="relative h-80 w-full">
@@ -466,7 +465,7 @@
         Chart.defaults.color = '#64748b';
 
         // ==========================================
-        // ประกาศตัวแปรกราฟทั้งหมดไว้ล่วงหน้า (ป้องกัน ReferenceError)
+        // ประกาศตัวแปรกราฟและตัวแปร Global
         // ==========================================
         let machineChartInstance = null;
         let orderQtyChartInstance = null;
@@ -476,6 +475,9 @@
         let statusChartInstance = null;
         let groupChartInstance = null;
         let trendChartInstance = null;
+
+        let rawData = [];
+        let calendarMap = {}; // 💡 ตัวแปรเก็บข้อมูลปฏิทินวันทำงาน
 
         // ==========================================
         // 💡 ตั้งค่า Master Data 
@@ -495,7 +497,6 @@
             'PLSK': 500, 'PPM5': 12000, 'TPMS': 6000
         };
 
-        // 💡 จับกลุ่มเครื่องจักร (MAC) เข้า Line ผลิต 💡
         const MAC_TO_LINE = {
             'PPML': 'PM1',
             'PPMN': 'PM2', 'TPMN': 'PM2', 'PPMS': 'PM2', 'TPMS': 'PM2', 'PPMT': 'PM2',
@@ -949,8 +950,6 @@
             return String(val).replace('T', ' '); 
         }
 
-        let rawData = [];
-
         function getColValue(row, columnName) {
             if (row[columnName] !== undefined) return row[columnName];
             
@@ -969,7 +968,6 @@
         let filterInstances = {};
 
         function initFilters() {
-            // เพิ่ม filterLine เข้าไปใน Array
             const filterIds = ['filterYear', 'filterMonth', 'filterDay', 'filterLine', 'filterMac', 'filterClass', 'filterGroup'];
             
             filterIds.forEach(id => {
@@ -1011,7 +1009,6 @@
                 const macVal = getColValue(row, 'MAC') != null ? String(getColValue(row, 'MAC')).trim() : '';
                 if (macVal) {
                     macs.add(macVal);
-                    // หา Line จาก Mac เพื่อใส่ใน Slicer
                     const lineVal = getLineFromMac(macVal);
                     if (lineVal) lines.add(lineVal);
                 }
@@ -1077,7 +1074,7 @@
                 
                 const dateVal = getColValue(row, 'PRODUCTION_DATE') != null ? getColValue(row, 'PRODUCTION_DATE') : '';
                 const macVal = getColValue(row, 'MAC') != null ? String(getColValue(row, 'MAC')).trim() : '';
-                const lineVal = getLineFromMac(macVal); // คำนวณ Line สำหรับเช็คเงื่อนไข
+                const lineVal = getLineFromMac(macVal); 
                 const classVal = getColValue(row, 'CLASS') != null ? String(getColValue(row, 'CLASS')).trim() : '';
                 const rawItemCode = getColValue(row, 'ITEM CODE') || getColValue(row, 'ITEM_CODE');
                 const itemVal = rawItemCode != null ? String(rawItemCode) : '';
@@ -1095,7 +1092,7 @@
                 if (!checkMatch(fYearArr, rowYear)) match = false;
                 if (!checkMatch(fMonthArr, rowMonth)) match = false;
                 if (!checkMatch(fDayArr, rowDay)) match = false;
-                if (!checkMatch(fLineArr, lineVal)) match = false; // เช็ค Filter Line
+                if (!checkMatch(fLineArr, lineVal)) match = false; 
                 if (!checkMatch(fMacArr, macVal)) match = false;
                 if (!checkMatch(fClassArr, classVal)) match = false;
                 if (!checkMatch(fGroupArr, groupVal)) match = false;
@@ -1105,27 +1102,83 @@
                 return match;
             });
 
-            // ตรวจสอบช่วงเวลาข้อมูลสำหรับกราฟ Order QTY ให้อัตโนมัติ (Day / Month / YTD)
+            // ตรวจสอบช่วงเวลาข้อมูล
             let minDateStr = "9999-99-99", maxDateStr = "0000-00-00";
+            const activeMacs = new Set();
+
             filteredData.forEach(row => {
                 const dateVal = getColValue(row, 'PRODUCTION_DATE') || '';
+                const macVal = getColValue(row, 'MAC');
                 const { y, m, d } = extractDateParts(dateVal);
+                
                 if (y && m && d) {
                     const dateStr = `${y}-${m}-${d}`;
                     if (dateStr < minDateStr) minDateStr = dateStr;
                     if (dateStr > maxDateStr) maxDateStr = dateStr;
+                }
+                
+                if (macVal && String(macVal).trim() !== '') {
+                    activeMacs.add(String(macVal).trim());
                 }
             });
             
             let orderTrendMode = 'monthly';
             let maxYearStr = maxDateStr !== "0000-00-00" ? maxDateStr.substring(0,4) : new Date().getFullYear().toString();
             
+            // 💡 1. คำนวณวันทำงานจริง (Actual Mins) "แยกรายเครื่องจักร" จาก Calendar Map
+            const macAvailableMinsDict = {};
+            activeMacs.forEach(mac => macAvailableMinsDict[mac] = 0);
+
             if (minDateStr !== "9999-99-99" && maxDateStr !== "0000-00-00") {
                 const minD = new Date(minDateStr);
                 const maxD = new Date(maxDateStr);
                 const diffDays = (maxD - minD) / (1000 * 60 * 60 * 24);
+                
                 if (diffDays <= 31) orderTrendMode = 'daily';
                 else if (diffDays > 365) orderTrendMode = 'ytd';
+
+                let currentD = new Date(minDateStr);
+                while (currentD <= maxD) {
+                    const y = currentD.getFullYear();
+                    const m = String(currentD.getMonth() + 1).padStart(2, '0');
+                    const d = String(currentD.getDate()).padStart(2, '0');
+                    const dateStr = `${y}-${m}-${d}`;
+                    const dayOfWeek = currentD.getDay(); // 0 = Sun, 6 = Sat
+
+                    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                    let baseMins = isWeekend ? 0 : 480;
+                    let isGlobalHoliday = false;
+
+                    // เช็ควันหยุดรวม (Holiday ไม่มีระบุ MAC)
+                    if (calendarMap[dateStr]) {
+                        calendarMap[dateStr].forEach(event => {
+                            if (event.type === 'HOLIDAY' && event.macs.includes('ALL')) {
+                                isGlobalHoliday = true;
+                            }
+                        });
+                    }
+
+                    // คำนวณเวลาให้แต่ละเครื่องจักร
+                    activeMacs.forEach(mac => {
+                        let dailyMins = isGlobalHoliday ? 0 : baseMins;
+
+                        if (calendarMap[dateStr]) {
+                            calendarMap[dateStr].forEach(event => {
+                                // เช็คว่า Event นี้ระบุ ALL หรือเจาะจงเครื่องนี้
+                                if (event.macs.includes('ALL') || event.macs.includes(mac)) {
+                                    if (event.type === 'HOLIDAY') {
+                                        dailyMins = 0; // หักลบเป็น 0
+                                    } else if (event.type === 'OT') {
+                                        dailyMins += event.min; // บวกเวลา OT เพิ่ม
+                                    }
+                                }
+                            });
+                        }
+                        macAvailableMinsDict[mac] = (macAvailableMinsDict[mac] || 0) + dailyMins;
+                    });
+
+                    currentD.setDate(currentD.getDate() + 1);
+                }
             }
             
             document.getElementById('orderTrendModeLabel').innerText = orderTrendMode === 'daily' ? 'รายวัน (Daily)' : (orderTrendMode === 'ytd' ? 'รายปี & เดือน (YTD)' : 'รายเดือน (Monthly)');
@@ -1138,12 +1191,10 @@
             const mediaDict = {};
             const macBatchData = {};
             const batchCapTrendDict = {}; 
-            const activeMacs = new Set();
             
             const orderTrendDict = {}; 
             const activeLinesForOrder = new Set();
 
-            // 💡 ตัวแปรสำหรับเก็บข้อมูล Throughput & Yield
             const macThroughputData = {};
             const macYieldData = {};
 
@@ -1217,7 +1268,6 @@
                 
                 if (macVal && batchNo && normalizedDate) {
                     const macKey = String(macVal).trim();
-                    activeMacs.add(macKey);
 
                     if (!batchCapTrendDict[normalizedDate]) {
                         batchCapTrendDict[normalizedDate] = {};
@@ -1244,7 +1294,6 @@
                     }
                 }
 
-                // 💡 สะสมข้อมูล Throughput & Yield ในแต่ละลูป
                 if (macVal) {
                     const macKey = String(macVal).trim();
                     if (hasValidTime) {
@@ -1331,7 +1380,20 @@
             document.getElementById('kpiTime').innerHTML = `${avgTime} <span class="text-base font-normal text-slate-400">นาที</span>`;
             document.getElementById('kpiIssues').innerHTML = `${issueCount} <span class="text-base font-normal text-slate-400">ครั้ง</span>`;
 
+            // 💡 2. อัปเดตการ์ด Machine Utilization 
             const macUtilContainer = document.getElementById('macUtilizationContainer');
+            const factoryTimeLabel = document.getElementById('factoryTimeLabel');
+            
+            // เปลี่ยนข้อความแจ้งเตือนให้อิงตามเครื่องจักร
+            if (activeMacs.size > 0) {
+                factoryTimeLabel.innerText = `ประมวลผลวันทำงานจริงและ OT แยกตามเครื่องจักร (Per-MAC)`;
+                factoryTimeLabel.classList.remove('bg-slate-100', 'text-slate-500');
+                factoryTimeLabel.classList.add('bg-blue-100', 'text-blue-700');
+            } else {
+                factoryTimeLabel.innerText = `ไม่พบข้อมูลเครื่องจักร`;
+                factoryTimeLabel.classList.add('bg-slate-100', 'text-slate-500');
+            }
+
             if (rawData.length === 0) {
                 macUtilContainer.innerHTML = `<div class="col-span-full text-center text-slate-500 py-6 font-medium">ยังไม่มีข้อมูล 📊</div>`;
                 macUtilContainer.className = "block";
@@ -1344,9 +1406,9 @@
                 const sortedMacsUtil = Object.entries(macTotalTimeDict).sort((a, b) => b[1] - a[1]);
                 
                 for (const [mName, totalMTime] of sortedMacsUtil) {
-                    const activeDays = macDaysDict[mName].size || 1; 
-                    const avgDailyTime = Math.round(totalMTime / activeDays);
-                    const percentUtil = ((avgDailyTime / 480) * 100).toFixed(1);
+                    // 💡 ดึงเวลาทำงานจริง (Minutes) ของเครื่องจักรนั้นๆ
+                    const availMins = macAvailableMinsDict[mName] || 0;
+                    const percentUtil = availMins > 0 ? ((totalMTime / availMins) * 100).toFixed(1) : 0;
                     
                     let bgBadge = 'bg-blue-100 text-blue-700';
                     let bgBar = 'bg-blue-500';
@@ -1371,7 +1433,7 @@
                             <div class="w-full bg-slate-100 rounded-full h-2 mb-2">
                                 <div class="${bgBar} h-2 rounded-full" style="width: ${Math.min(percentUtil, 100)}%"></div>
                             </div>
-                            <p class="text-xs text-slate-500 text-right font-medium"><span class="text-slate-700">${avgDailyTime.toLocaleString()}</span> / 480 นาที</p>
+                            <p class="text-xs text-slate-500 text-right font-medium" title="รันงานจริง / เวลาเปิดเครื่อง"><span class="text-slate-700">${Math.round(totalMTime/60).toLocaleString()}</span> / ${Math.round(availMins/60).toLocaleString()} ชม.</p>
                         </div>
                     `;
                 }
@@ -1589,7 +1651,6 @@
                 batchCapChartInstance.update();
             }
 
-            // 💡 อัปเดตกราฟ Throughput
             if (throughputChartInstance) {
                 const sortedMacsTP = Object.keys(macThroughputData).sort((a,b) => {
                     const tpA = macThroughputData[a].totalQty / (macThroughputData[a].totalTime / 60);
@@ -1613,7 +1674,6 @@
                 throughputChartInstance.update();
             }
 
-            // 💡 อัปเดตกราฟ Yield %
             if (yieldChartInstance) {
                 const sortedMacsY = Object.keys(macYieldData).sort((a,b) => {
                     const yA = (macYieldData[a].totalProd / macYieldData[a].totalOrder) * 100;
@@ -1736,15 +1796,41 @@
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, {type: 'array'});
                 
+                // โหลด Sheet แรก (ข้อมูลการผลิต)
                 const firstSheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[firstSheetName];
-                
                 const rawJson = XLSX.utils.sheet_to_json(worksheet, {raw: true}); 
+                
+                // 💡 โหลด Sheet ปฏิทิน (ถ้ามี) ค้นหาจากชื่อ "Calendar" หรือชีตที่ 2
+                const calSheetName = workbook.SheetNames.find(n => n.toLowerCase().includes('calendar')) || workbook.SheetNames[1];
+                if (calSheetName) {
+                    const calRawData = XLSX.utils.sheet_to_json(workbook.Sheets[calSheetName], {raw: true});
+                    calendarMap = {};
+                    calRawData.forEach(row => {
+                        const dVal = getColValue(row, 'Date') || getColValue(row, 'DATE') || getColValue(row, 'วันที่');
+                        const tVal = getColValue(row, 'Type') || getColValue(row, 'TYPE') || getColValue(row, 'ประเภท');
+                        const mVal = getColValue(row, 'Min') || getColValue(row, 'MIN') || getColValue(row, 'นาที');
+                        // 💡 อ่านคอลัมน์ MAC
+                        const macVal = getColValue(row, 'MAC') || getColValue(row, 'เครื่องจักร'); 
+
+                        const { y, m, d } = extractDateParts(dVal);
+                        if (y && m && d) {
+                            const dateStr = `${y}-${m}-${d}`;
+                            if (!calendarMap[dateStr]) calendarMap[dateStr] = [];
+                            
+                            calendarMap[dateStr].push({
+                                type: String(tVal).trim().toUpperCase(),
+                                min: Number(mVal) || 0,
+                                macs: macVal ? String(macVal).split(',').map(s => s.trim()) : ['ALL'] // รองรับใส่ , หลายเครื่อง
+                            });
+                        }
+                    });
+                }
                 
                 if(rawJson && rawJson.length > 0) {
                     rawData = rawJson;
                     populateDropdowns(rawData); 
-                    showAlert('สำเร็จ!', 'โหลดข้อมูลจากไฟล์ Excel สำเร็จ! จำนวน ' + rawData.length + ' รายการ', 'success');
+                    showAlert('สำเร็จ!', 'โหลดข้อมูลการผลิตและปฏิทินสำเร็จ! จำนวน ' + rawData.length + ' รายการ', 'success');
                     resetFilters(); 
                 } else {
                     showAlert('แจ้งเตือน', 'ไม่พบข้อมูลในไฟล์ Excel ที่อัปโหลด', 'info');
