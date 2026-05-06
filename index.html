@@ -477,38 +477,14 @@
         let trendChartInstance = null;
 
         let rawData = [];
-        let calendarMap = {}; // 💡 ตัวแปรเก็บข้อมูลปฏิทินวันทำงาน
+        let calendarMap = {}; // ตัวแปรเก็บข้อมูลปฏิทินวันทำงาน
 
         // ==========================================
-        // 💡 ตั้งค่า Master Data 
+        // 💡 ตั้งค่า Master Data แบบไดนามิก (ดึงจาก Sheet MAC_CAP)
         // ==========================================
-        const MAC_STD_BATCH_CAP = {
-            'default': 1000,
-            'PPML': 1000, 'TFTT': 12000, 'PPMN': 1000, 'TFOM': 10530,
-            'PCCP': 20250, 'PDIS': 1000, 'PTWG': 13000, 'TPMN': 1000,
-            'TF35': 14280, 'PPMS': 1000, 'TR1W': 48000, 'TF1T': 54000,
-            'PCWF': 305, 'PLSK': 500, 'PPM5': 1000, 'TPMS': 1000
-        };
-
-        const MAC_CAPACITY = {
-            'PPML': 14000, 'TFTT': 12000, 'PPMN': 6000, 'TFOM': 10530,
-            'PCCP': 20250, 'PDIS': 5000, 'TPMN': 6000, 'TF35': 14280,
-            'PPMS': 6000, 'TR1W': 48000, 'TF1T': 54000, 'PCWF': 305,
-            'PLSK': 500, 'PPM5': 12000, 'TPMS': 6000
-        };
-
-        const MAC_TO_LINE = {
-            'PPML': 'PM1',
-            'PPMN': 'PM2', 'TPMN': 'PM2', 'PPMS': 'PM2', 'TPMS': 'PM2', 'PPMT': 'PM2',
-            'PPM4': 'PM4',
-            'PPM5': 'PM5',
-            'PCCP': 'CC',
-            'LS1T': 'LIQUID VIT', 'LS500': 'LIQUID VIT', 'PLSK': 'LIQUID VIT',
-            'PDIS': 'DISINF', 'PFDS': 'DISINF', 'PFDL': 'DISINF',
-            'T355': 'TOLL/REPACK', 'T35T': 'TOLL/REPACK', 'TACT': 'TOLL/REPACK', 'TFTT': 'TOLL/REPACK', 'TFOM': 'TOLL/REPACK', 'TF35': 'TOLL/REPACK', 'TR1W': 'TOLL/REPACK', 'TF1T': 'TOLL/REPACK', 'PCWF': 'TOLL/REPACK', 'NS': 'TOLL/REPACK',
-            'PR1N': 'REFILL', 'PR1W': 'REFILL', 'PR6N': 'REFILL', 'PR6W': 'REFILL', 'PRFD': 'REFILL', 'PRFT': 'REFILL', 'PRPD': 'REFILL', 'PRPM': 'REFILL',
-            'PTCP': 'TABLET', 'PTCT': 'TABLET', 'PTMX': 'TABLET', 'PTPK': 'TABLET', 'PTTP': 'TABLET', 'PTWG': 'TABLET'
-        };
+        let MAC_STD_BATCH_CAP = { 'default': 1000 };
+        let MAC_CAPACITY = {};
+        let MAC_TO_LINE = {};
 
         function getStdBatchCap(macName) {
             return MAC_STD_BATCH_CAP[macName] || MAC_STD_BATCH_CAP['default'];
@@ -1009,6 +985,7 @@
                 const macVal = getColValue(row, 'MAC') != null ? String(getColValue(row, 'MAC')).trim() : '';
                 if (macVal) {
                     macs.add(macVal);
+                    // 💡 เรียกใช้ getLineFromMac หลังจากโหลด MAC_TO_LINE มาแล้ว
                     const lineVal = getLineFromMac(macVal);
                     if (lineVal) lines.add(lineVal);
                 }
@@ -1149,7 +1126,6 @@
                     let baseMins = isWeekend ? 0 : 480;
                     let isGlobalHoliday = false;
 
-                    // เช็ควันหยุดรวม (Holiday ไม่มีระบุ MAC)
                     if (calendarMap[dateStr]) {
                         calendarMap[dateStr].forEach(event => {
                             if (event.type === 'HOLIDAY' && event.macs.includes('ALL')) {
@@ -1158,18 +1134,16 @@
                         });
                     }
 
-                    // คำนวณเวลาให้แต่ละเครื่องจักร
                     activeMacs.forEach(mac => {
                         let dailyMins = isGlobalHoliday ? 0 : baseMins;
 
                         if (calendarMap[dateStr]) {
                             calendarMap[dateStr].forEach(event => {
-                                // เช็คว่า Event นี้ระบุ ALL หรือเจาะจงเครื่องนี้
                                 if (event.macs.includes('ALL') || event.macs.includes(mac)) {
                                     if (event.type === 'HOLIDAY') {
-                                        dailyMins = 0; // หักลบเป็น 0
+                                        dailyMins = 0; 
                                     } else if (event.type === 'OT') {
-                                        dailyMins += event.min; // บวกเวลา OT เพิ่ม
+                                        dailyMins += event.min; 
                                     }
                                 }
                             });
@@ -1380,11 +1354,10 @@
             document.getElementById('kpiTime').innerHTML = `${avgTime} <span class="text-base font-normal text-slate-400">นาที</span>`;
             document.getElementById('kpiIssues').innerHTML = `${issueCount} <span class="text-base font-normal text-slate-400">ครั้ง</span>`;
 
-            // 💡 2. อัปเดตการ์ด Machine Utilization 
+            // 💡 อัปเดตการ์ด Machine Utilization 
             const macUtilContainer = document.getElementById('macUtilizationContainer');
             const factoryTimeLabel = document.getElementById('factoryTimeLabel');
             
-            // เปลี่ยนข้อความแจ้งเตือนให้อิงตามเครื่องจักร
             if (activeMacs.size > 0) {
                 factoryTimeLabel.innerText = `ประมวลผลวันทำงานจริงและ OT แยกตามเครื่องจักร (Per-MAC)`;
                 factoryTimeLabel.classList.remove('bg-slate-100', 'text-slate-500');
@@ -1406,7 +1379,6 @@
                 const sortedMacsUtil = Object.entries(macTotalTimeDict).sort((a, b) => b[1] - a[1]);
                 
                 for (const [mName, totalMTime] of sortedMacsUtil) {
-                    // 💡 ดึงเวลาทำงานจริง (Minutes) ของเครื่องจักรนั้นๆ
                     const availMins = macAvailableMinsDict[mName] || 0;
                     const percentUtil = availMins > 0 ? ((totalMTime / availMins) * 100).toFixed(1) : 0;
                     
@@ -1563,6 +1535,7 @@
                 const sortedMacs = Object.keys(macDict).sort((a,b) => macDict[b] - macDict[a]).slice(0, 7);
                 const actualData = sortedMacs.map(mac => macDict[mac]);
                 const capData = sortedMacs.map(mac => {
+                    // 💡 อ้างอิงจาก Master Data แบบใหม่
                     const dailyCap = MAC_CAPACITY[mac] || 0;
                     const daysRan = macDaysDict[mac].size || 1; 
                     return dailyCap * daysRan;
@@ -1626,6 +1599,7 @@
                         if (!dayData) return null; 
 
                         const batchCount = dayData.uniqueBatches.size;
+                        // 💡 อ้างอิงจาก Master Data แบบใหม่
                         const totalStdCap = batchCount * getStdBatchCap(mac);
                         return totalStdCap > 0 ? Number(((dayData.totalQtyOrder / totalStdCap) * 100).toFixed(1)) : null;
                     });
@@ -1796,13 +1770,13 @@
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, {type: 'array'});
                 
-                // โหลด Sheet แรก (ข้อมูลการผลิต)
+                // 1. โหลด Sheet แรก (ข้อมูลการผลิต)
                 const firstSheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[firstSheetName];
                 const rawJson = XLSX.utils.sheet_to_json(worksheet, {raw: true}); 
                 
-                // 💡 โหลด Sheet ปฏิทิน (ถ้ามี) ค้นหาจากชื่อ "Calendar" หรือชีตที่ 2
-                const calSheetName = workbook.SheetNames.find(n => n.toLowerCase().includes('calendar')) || workbook.SheetNames[1];
+                // 2. โหลด Sheet ปฏิทิน (ถ้ามี) 
+                const calSheetName = workbook.SheetNames.find(n => n.toLowerCase().includes('calendar'));
                 if (calSheetName) {
                     const calRawData = XLSX.utils.sheet_to_json(workbook.Sheets[calSheetName], {raw: true});
                     calendarMap = {};
@@ -1810,7 +1784,6 @@
                         const dVal = getColValue(row, 'Date') || getColValue(row, 'DATE') || getColValue(row, 'วันที่');
                         const tVal = getColValue(row, 'Type') || getColValue(row, 'TYPE') || getColValue(row, 'ประเภท');
                         const mVal = getColValue(row, 'Min') || getColValue(row, 'MIN') || getColValue(row, 'นาที');
-                        // 💡 อ่านคอลัมน์ MAC
                         const macVal = getColValue(row, 'MAC') || getColValue(row, 'เครื่องจักร'); 
 
                         const { y, m, d } = extractDateParts(dVal);
@@ -1821,8 +1794,39 @@
                             calendarMap[dateStr].push({
                                 type: String(tVal).trim().toUpperCase(),
                                 min: Number(mVal) || 0,
-                                macs: macVal ? String(macVal).split(',').map(s => s.trim()) : ['ALL'] // รองรับใส่ , หลายเครื่อง
+                                macs: macVal ? String(macVal).split(',').map(s => s.trim()) : ['ALL']
                             });
+                        }
+                    });
+                }
+
+                // 💡 3. โหลด Sheet MAC_CAP (ทำ Mapping อัตโนมัติจากไฟล์)
+                const capSheetName = workbook.SheetNames.find(n => n.toLowerCase().includes('mac_cap') || n.toLowerCase().includes('mac cap'));
+                if (capSheetName) {
+                    const capRawData = XLSX.utils.sheet_to_json(workbook.Sheets[capSheetName], {raw: true});
+                    
+                    // รีเซ็ตค่าเดิมก่อนนำข้อมูลใหม่เข้าไปแทนที่
+                    MAC_STD_BATCH_CAP = { 'default': 1000 };
+                    MAC_CAPACITY = {};
+                    MAC_TO_LINE = {};
+
+                    capRawData.forEach(row => {
+                        const macCode = getColValue(row, 'MAC_CODE') || getColValue(row, 'MAC CODE') || getColValue(row, 'MAC');
+                        if (macCode) {
+                            const mac = String(macCode).trim();
+                            
+                            const line = getColValue(row, 'PROD_LINE') || getColValue(row, 'LINE');
+                            if (line) MAC_TO_LINE[mac] = String(line).trim();
+                            
+                            const stdCap = getColValue(row, 'MAC_STD_BATCH_CAP') || getColValue(row, 'STD BATCH CAP');
+                            if (stdCap !== undefined && stdCap !== null && !isNaN(Number(stdCap))) {
+                                MAC_STD_BATCH_CAP[mac] = Number(stdCap);
+                            }
+                            
+                            const maxCap = getColValue(row, 'MAC_CAPACITY') || getColValue(row, 'CAPACITY');
+                            if (maxCap !== undefined && maxCap !== null && !isNaN(Number(maxCap))) {
+                                MAC_CAPACITY[mac] = Number(maxCap);
+                            }
                         }
                     });
                 }
@@ -1830,7 +1834,7 @@
                 if(rawJson && rawJson.length > 0) {
                     rawData = rawJson;
                     populateDropdowns(rawData); 
-                    showAlert('สำเร็จ!', 'โหลดข้อมูลการผลิตและปฏิทินสำเร็จ! จำนวน ' + rawData.length + ' รายการ', 'success');
+                    showAlert('สำเร็จ!', 'โหลดข้อมูลทั้งหมด (ผลิต, ปฏิทิน, MAC CAP) เรียบร้อยแล้วค่ะ', 'success');
                     resetFilters(); 
                 } else {
                     showAlert('แจ้งเตือน', 'ไม่พบข้อมูลในไฟล์ Excel ที่อัปโหลด', 'info');
