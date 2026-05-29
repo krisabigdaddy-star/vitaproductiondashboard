@@ -6,7 +6,7 @@
     <title>Factory Production Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- 💡 เพิ่ม Plugin สำหรับแสดง Label ในกราฟ (DataLabels) -->
+    <!-- เพิ่ม Plugin สำหรับแสดง Label ในกราฟ (DataLabels) -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
@@ -19,29 +19,29 @@
         body {
             font-family: 'Sarabun', sans-serif;
         }
-        /* Custom scrollbar for table */
-        .table-container::-webkit-scrollbar {
+        /* Custom scrollbar for table and kanban */
+        .custom-scrollbar::-webkit-scrollbar {
             height: 8px;
             width: 8px;
         }
-        .table-container::-webkit-scrollbar-track {
+        .custom-scrollbar::-webkit-scrollbar-track {
             background: #f1f1f1; 
             border-radius: 4px;
         }
-        .table-container::-webkit-scrollbar-thumb {
+        .custom-scrollbar::-webkit-scrollbar-thumb {
             background: #cbd5e1; 
             border-radius: 4px;
         }
-        .table-container::-webkit-scrollbar-thumb:hover {
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #94a3b8; 
         }
 
         /* ปรับแต่งดีไซน์ของ Choices.js (Slicer) ให้เข้ากับ Tailwind */
         .choices { margin-bottom: 0 !important; }
         .choices[data-type*="select-multiple"] .choices__inner {
-            background-color: #f8fafc !important; /* bg-slate-50 */
-            border: 1px solid #e2e8f0 !important; /* border-slate-200 */
-            border-radius: 0.5rem !important; /* rounded-lg */
+            background-color: #f8fafc !important; 
+            border: 1px solid #e2e8f0 !important; 
+            border-radius: 0.5rem !important; 
             padding: 4px 6px !important;
             min-height: 40px !important;
             display: flex;
@@ -49,8 +49,8 @@
             align-items: center;
         }
         .choices__list--multiple .choices__item {
-            background-color: #3b82f6 !important; /* bg-blue-500 */
-            border: 1px solid #2563eb !important; /* border-blue-600 */
+            background-color: #3b82f6 !important; 
+            border: 1px solid #2563eb !important; 
             border-radius: 0.25rem !important;
             padding: 2px 6px !important;
             font-family: 'Sarabun', sans-serif;
@@ -75,7 +75,7 @@
             padding: 8px 12px !important;
         }
         .choices__list--dropdown .choices__item--selectable.is-highlighted {
-            background-color: #eff6ff !important; /* bg-blue-50 */
+            background-color: #eff6ff !important; 
             color: #0f172a !important;
         }
         .choices[data-type*="select-multiple"] .choices__button {
@@ -121,7 +121,7 @@
             </div>
             
             <div id="wrapper-filters">
-                <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3">
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                     <div class="flex flex-col">
                         <label class="text-xs text-slate-500 mb-1 font-medium">ปี (Year)</label>
                         <select id="filterYear" multiple></select>
@@ -134,6 +134,11 @@
                         <label class="text-xs text-slate-500 mb-1 font-medium">วัน (Day)</label>
                         <select id="filterDay" multiple></select>
                     </div>
+                    <!-- 💡 เพิ่ม Slicer สำหรับสถานะแผน (PLAN_STATUS) -->
+                    <div class="flex flex-col">
+                        <label class="text-xs text-slate-500 mb-1 font-medium text-blue-600">สถานะแผน (STATUS)</label>
+                        <select id="filterStatus" multiple></select>
+                    </div>
                     <div class="flex flex-col">
                         <label class="text-xs text-slate-500 mb-1 font-medium">ไลน์ผลิต (LINE)</label>
                         <select id="filterLine" multiple></select>
@@ -143,16 +148,16 @@
                         <select id="filterMac" multiple></select>
                     </div>
                     <div class="flex flex-col">
+                        <label class="text-xs text-slate-500 mb-1 font-medium">กลุ่มสินค้า (GROUP)</label>
+                        <select id="filterGroup" multiple></select>
+                    </div>
+                    <div class="flex flex-col">
                         <label class="text-xs text-slate-500 mb-1 font-medium">คลาส (CLASS)</label>
                         <select id="filterClass" multiple></select>
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs text-slate-500 mb-1 font-medium">รหัสสินค้า (ITEM)</label>
                         <input type="text" id="filterItem" placeholder="เช่น P-001..." class="bg-slate-50 border border-slate-200 text-sm rounded-lg p-2 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-700 w-full" style="min-height: 40px;">
-                    </div>
-                    <div class="flex flex-col">
-                        <label class="text-xs text-slate-500 mb-1 font-medium">กลุ่มสินค้า (GROUP)</label>
-                        <select id="filterGroup" multiple></select>
                     </div>
                 </div>
             </div>
@@ -202,6 +207,24 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                         <span>ส่งผลให้เกิด Downtime สูง</span>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 💡 Daily Production Plan Section (KANBAN BOARD) 💡 -->
+        <div class="mt-6">
+            <div class="flex justify-between items-center px-2 mb-3 cursor-pointer hover:bg-slate-200/50 p-2 -mx-2 rounded-lg transition-colors" onclick="toggleSection('wrapper-dailyplan', 'icon-dailyplan')">
+                <div class="flex items-center gap-4">
+                    <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                        <span class="text-xl">📅</span> กระดานแผนการผลิตรายวัน (Daily Kanban Board)
+                    </h3>
+                    <input type="date" id="dailyPlanDate" class="bg-white border border-slate-300 text-sm rounded-lg p-1.5 px-3 focus:outline-none focus:border-blue-500 font-bold text-blue-700 cursor-auto shadow-sm" onclick="event.stopPropagation();" onchange="updateDailyPlanBoard()">
+                </div>
+                <svg id="icon-dailyplan" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+            <div id="wrapper-dailyplan" class="bg-slate-100 rounded-2xl shadow-inner p-6 border border-slate-200 relative z-20 overflow-hidden min-h-[300px]">
+                <div id="dailyPlanContainer" class="w-full">
+                    <div class="text-center text-slate-500 py-10 font-medium">กรุณาอัปโหลดข้อมูลและเลือกวันที่เพื่อดูแผน 📊</div>
                 </div>
             </div>
         </div>
@@ -297,7 +320,7 @@
                 <svg id="icon-status" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             </div>
             <div id="wrapper-status">
-                <div id="statusBreakdownContainer" class="max-h-96 overflow-y-auto pr-2 table-container">
+                <div id="statusBreakdownContainer" class="max-h-96 overflow-y-auto pr-2 custom-scrollbar">
                     <div class="text-center text-slate-500 py-10 font-medium">ยังไม่มีข้อมูล 📊</div>
                 </div>
             </div>
@@ -313,7 +336,8 @@
                 <!-- Bar Chart: Production by Machine -->
                 <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100 lg:col-span-2">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-slate-800">ยอดผลิตเปรียบเทียบกำลังการผลิต (Actual vs Capacity)</h3>
+                        <!-- 💡 เปลี่ยนชื่อกราฟให้สะท้อนเงื่อนไขเวลาทำงานจริงและ OT -->
+                        <h3 class="font-bold text-slate-800">ยอดผลิตเปรียบเทียบกำลังการผลิต (Actual vs Capacity ตามวันทำงานจริง+OT)</h3>
                         <button class="text-slate-400 hover:text-blue-500"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg></button>
                     </div>
                     <div class="relative h-72 w-full">
@@ -329,10 +353,10 @@
                     <div class="relative h-64 w-full flex justify-center items-center">
                         <canvas id="statusChart"></canvas>
                     </div>
-                    <div class="mt-4 flex justify-center gap-4 text-sm">
+                    <div class="mt-4 flex justify-center gap-4 text-sm flex-wrap">
                         <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-emerald-400"></span> Completed</div>
                         <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-rose-400"></span> Abort</div>
-                        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-amber-400"></span> Reserved</div>
+                        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-amber-400"></span> Pending/Reserved</div>
                     </div>
                 </div>
             </div>
@@ -347,6 +371,7 @@
             <div id="wrapper-orderqty" class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100 relative z-10">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-bold text-slate-800">ปริมาณออเดอร์สะสมแยกตามไลน์ (Stacked Order QTY Trend)</h3>
+                    <!-- 💡 แก้ไขหน่วยเป็น x 1,000 -->
                     <span class="text-xs font-semibold text-white bg-blue-500 px-3 py-1 rounded-full shadow-sm">หน่วย: x 1,000 | โหมด: <span id="orderTrendModeLabel">อัตโนมัติ</span></span>
                 </div>
                 <div class="relative h-80 w-full">
@@ -396,7 +421,7 @@
                         </h3>
                         <span class="bg-rose-100 text-rose-700 text-xs font-bold px-3 py-1 rounded-full">Need Attention</span>
                     </div>
-                    <div class="p-0 overflow-x-auto table-container flex-grow">
+                    <div class="p-0 overflow-x-auto custom-scrollbar flex-grow">
                         <table class="w-full text-left border-collapse whitespace-nowrap">
                             <thead>
                                 <tr class="bg-slate-50 text-slate-500 text-sm border-b border-slate-200">
@@ -466,7 +491,7 @@
         Chart.defaults.font.family = "'Sarabun', sans-serif";
         Chart.defaults.color = '#64748b';
 
-        // 💡 สมัครใช้งาน ChartDataLabels แบบ Global แต่ซ่อนไว้เป็นค่าเริ่มต้น
+        // สมัครใช้งาน ChartDataLabels แบบ Global แต่ซ่อนไว้เป็นค่าเริ่มต้น
         Chart.register(ChartDataLabels);
         Chart.defaults.plugins.datalabels.display = false; 
 
@@ -483,10 +508,10 @@
         let trendChartInstance = null;
 
         let rawData = [];
-        let calendarMap = {}; // ตัวแปรเก็บข้อมูลปฏิทินวันทำงาน
+        let calendarMap = {}; 
 
         // ==========================================
-        // 💡 ตั้งค่า Master Data แบบไดนามิก (ดึงจาก Sheet MAC_CAP)
+        // ตั้งค่า Master Data แบบไดนามิก (ดึงจาก Sheet MAC_CAP)
         // ==========================================
         let MAC_STD_BATCH_CAP = { 'default': 1000 };
         let MAC_CAPACITY = {};
@@ -496,8 +521,9 @@
             return MAC_STD_BATCH_CAP[macName] || MAC_STD_BATCH_CAP['default'];
         }
 
+        // อ่านค่า "ไม่ระบุ MAC"
         function getLineFromMac(mac) {
-            if (!mac) return '';
+            if (!mac || mac === 'ไม่ระบุ MAC') return 'อื่นๆ (Other)';
             return MAC_TO_LINE[mac] || 'อื่นๆ (Other)';
         }
 
@@ -521,7 +547,7 @@
                         },
                         {
                             type: 'line',
-                            label: 'กำลังผลิตสูงสุด (Max Capacity)',
+                            label: 'กำลังผลิตสูงสุด (รวม OT)',
                             data: [],
                             borderColor: 'rgba(239, 68, 68, 1)', 
                             backgroundColor: 'rgba(239, 68, 68, 1)',
@@ -606,10 +632,8 @@
                             position: 'top', 
                             labels: { font: { family: "'Sarabun', sans-serif", size: 11 }, usePointStyle: true, boxWidth: 8 } 
                         },
-                        // 💡 ตั้งค่า DataLabels สำหรับกราฟ Stacked QTY
                         datalabels: {
                             display: function(context) {
-                                // ซ่อน label ถ้ายอดน้อยกว่า 1 (ป้องกันตัวเลขทับกันในแท่งเล็กๆ)
                                 return context.dataset.data[context.dataIndex] >= 1; 
                             },
                             color: '#ffffff',
@@ -620,9 +644,10 @@
                                 weight: 'bold',
                                 size: 10
                             },
-                            formatter: function(value) {
-                                return value.toLocaleString(undefined, {maximumFractionDigits: 1});
-                            }
+                            formatter: function(value, context) {
+                                return context.dataset.label + '\n' + value.toLocaleString(undefined, {maximumFractionDigits: 1});
+                            },
+                            textAlign: 'center'
                         },
                         tooltip: {
                             mode: 'index',
@@ -950,6 +975,15 @@
             return String(val).replace('T', ' '); 
         }
 
+        function extractTimeOnly(val) {
+            const str = formatExcelDateTime(val);
+            if (str === '-') return '-';
+            if (str.includes(' ')) {
+                return str.split(' ')[1]; 
+            }
+            return str;
+        }
+
         function getColValue(row, columnName) {
             if (row[columnName] !== undefined) return row[columnName];
             
@@ -963,12 +997,163 @@
         }
 
         // ========================================================
+        // 💡 ระบบ Daily Plan Board (Kanban)
+        // ========================================================
+        function updateDailyPlanBoard() {
+            const dateInput = document.getElementById('dailyPlanDate').value;
+            const container = document.getElementById('dailyPlanContainer');
+            
+            if (!dateInput) {
+                container.innerHTML = `<div class="text-center text-slate-500 py-10 font-medium">กรุณาเลือกวันที่ เพื่อดูแผนการผลิต 📊</div>`;
+                return;
+            }
+
+            const dailyData = rawData.filter(row => {
+                const dateVal = getColValue(row, 'PRODUCTION_DATE') || getColValue(row, 'PROD_TIME_START');
+                const { y, m, d } = extractDateParts(dateVal);
+                if (!y) return false;
+                return `${y}-${m}-${d}` === dateInput;
+            });
+
+            if (dailyData.length === 0) {
+                container.innerHTML = `<div class="text-center text-slate-500 py-10 font-medium bg-white rounded-xl">ไม่พบแผนการผลิตในวันที่ ${dateInput} 📭</div>`;
+                return;
+            }
+
+            const boardData = {};
+            
+            dailyData.forEach(row => {
+                let rawMac = getColValue(row, 'MAC');
+                const macVal = (rawMac != null && String(rawMac).trim() !== '') ? String(rawMac).trim() : 'ไม่ระบุ MAC';
+                const lineVal = getLineFromMac(macVal);
+                
+                if (!boardData[lineVal]) boardData[lineVal] = {};
+                if (!boardData[lineVal][macVal]) boardData[lineVal][macVal] = [];
+
+                let rawQtyOrder = getColValue(row, 'QTY_ORDER') || getColValue(row, 'QTY ORDER') || getColValue(row, 'ORDER_QTY');
+                let qtyOrder = Number(String(rawQtyOrder).replace(/,/g, '').trim()) || 0;
+
+                const statusVal = getColValue(row, 'PLAN_STATUS') || '';
+                const st = String(statusVal).toLowerCase();
+                let statusColor = 'border-slate-300 bg-white';
+                let statusBg = 'bg-slate-100 text-slate-600';
+                
+                if (st.includes('complete') || st.includes('7')) {
+                    statusColor = 'border-emerald-500 bg-emerald-50';
+                    statusBg = 'bg-emerald-500 text-white';
+                } else if (st.includes('abort') || st.includes('issue')) {
+                    statusColor = 'border-rose-500 bg-rose-50';
+                    statusBg = 'bg-rose-500 text-white';
+                } else {
+                    statusColor = 'border-blue-400 bg-white';
+                    statusBg = 'bg-blue-100 text-blue-700';
+                }
+
+                boardData[lineVal][macVal].push({
+                    orderNo: getColValue(row, 'ORDER_NO') || getColValue(row, 'ชื่อเรื่อง') || '-',
+                    itemName: getColValue(row, 'ITEM_NAME') || '-',
+                    timeStart: extractTimeOnly(getColValue(row, 'PROD_TIME_START')),
+                    timeFinish: extractTimeOnly(getColValue(row, 'PROD_TIME_FINISH')),
+                    qty: qtyOrder,
+                    statusText: statusVal || 'Pending',
+                    statusColor: statusColor,
+                    statusBg: statusBg,
+                    rawStart: getColValue(row, 'PROD_TIME_START') || 0 
+                });
+            });
+
+            let htmlOut = '';
+            
+            Object.keys(boardData).sort().forEach(line => {
+                htmlOut += `
+                <div class="mb-8 last:mb-0">
+                    <h4 class="font-bold text-xl text-slate-800 mb-4 flex items-center gap-2">
+                        <span class="w-1.5 h-6 bg-blue-600 rounded-full inline-block"></span> 
+                        Line: ${line}
+                    </h4>
+                    <div class="flex overflow-x-auto gap-4 pb-4 px-1 custom-scrollbar snap-x">
+                `;
+
+                Object.keys(boardData[line]).sort().forEach(mac => {
+                    const batches = boardData[line][mac];
+                    batches.sort((a,b) => {
+                        if(a.rawStart < b.rawStart) return -1;
+                        if(a.rawStart > b.rawStart) return 1;
+                        return 0;
+                    });
+
+                    const stdCap = getStdBatchCap(mac);
+                    const totalQtyToday = batches.reduce((sum, b) => sum + b.qty, 0);
+                    const dailyMaxCap = MAC_CAPACITY[mac] || (stdCap * 10); 
+                    let pctCap = dailyMaxCap > 0 ? Math.round((totalQtyToday / dailyMaxCap) * 100) : 0;
+                    let capColor = pctCap > 100 ? 'bg-rose-500' : 'bg-blue-500';
+                    
+                    const jobText = batches.length > 1 ? 'Jobs' : 'Job';
+
+                    htmlOut += `
+                        <div class="min-w-[320px] max-w-[320px] bg-slate-200/60 p-4 rounded-xl shrink-0 snap-start border border-slate-200 shadow-sm flex flex-col max-h-[600px]">
+                            <div class="flex justify-between items-center mb-2">
+                                <h5 class="font-bold text-slate-800 text-lg">${mac}</h5>
+                                <span class="bg-white text-slate-600 text-xs font-bold px-2 py-1 rounded shadow-sm">${batches.length} ${jobText}</span>
+                            </div>
+                            
+                            <!-- Capacity Bar -->
+                            <div class="mb-4">
+                                <div class="flex justify-between text-[10px] text-slate-500 mb-1 font-medium">
+                                    <span>โหลดงานวันนี้: ${totalQtyToday.toLocaleString()} KG</span>
+                                    <span>${pctCap}%</span>
+                                </div>
+                                <div class="w-full bg-slate-300 rounded-full h-1.5">
+                                    <div class="${capColor} h-1.5 rounded-full" style="width: ${Math.min(pctCap, 100)}%"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Cards Container -->
+                            <div class="overflow-y-auto custom-scrollbar flex-grow pr-1">
+                    `;
+
+                    batches.forEach(b => {
+                        htmlOut += `
+                                <div class="p-3 rounded-lg shadow-sm mb-3 border-l-4 ${b.statusColor} hover:shadow-md transition-shadow relative group">
+                                    <div class="flex justify-between items-start mb-1.5">
+                                        <div class="font-semibold text-slate-800 text-sm truncate pr-2" title="${b.orderNo}">${b.orderNo}</div>
+                                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${b.statusBg}">${b.statusText}</span>
+                                    </div>
+                                    <div class="text-xs text-slate-600 font-medium mb-1 line-clamp-2" title="${b.itemName}">${b.itemName}</div>
+                                    <div class="flex justify-between items-end mt-2 pt-2 border-t border-slate-100/50">
+                                        <div class="text-xs text-slate-500 flex items-center gap-1">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            ${b.timeStart} - ${b.timeFinish}
+                                        </div>
+                                        <div class="text-xs font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">${b.qty.toLocaleString()} KG</div>
+                                    </div>
+                                </div>
+                        `;
+                    });
+
+                    htmlOut += `
+                            </div>
+                        </div>
+                    `;
+                });
+
+                htmlOut += `
+                    </div>
+                </div>
+                `;
+            });
+
+            container.innerHTML = htmlOut;
+        }
+
+        // ========================================================
         // ระบบ Slicer
         // ========================================================
         let filterInstances = {};
 
         function initFilters() {
-            const filterIds = ['filterYear', 'filterMonth', 'filterDay', 'filterLine', 'filterMac', 'filterClass', 'filterGroup'];
+            // 💡 เพิ่ม filterStatus เข้าไปใน Array
+            const filterIds = ['filterYear', 'filterMonth', 'filterDay', 'filterStatus', 'filterLine', 'filterMac', 'filterClass', 'filterGroup'];
             
             filterIds.forEach(id => {
                 const el = document.getElementById(id);
@@ -998,6 +1183,7 @@
             const macs = new Set();
             const classes = new Set();
             const groups = new Set();
+            const statuses = new Set(); // 💡 Set สำหรับสถานะแผน
 
             data.forEach(row => {
                 const dateVal = getColValue(row, 'PRODUCTION_DATE') != null ? getColValue(row, 'PRODUCTION_DATE') : '';
@@ -1006,19 +1192,21 @@
                 if (m) months.add(m);
                 if (d) days.add(d);
 
-                const macVal = getColValue(row, 'MAC') != null ? String(getColValue(row, 'MAC')).trim() : '';
-                if (macVal) {
-                    macs.add(macVal);
-                    // เรียกใช้ getLineFromMac หลังจากโหลด MAC_TO_LINE มาแล้ว
-                    const lineVal = getLineFromMac(macVal);
-                    if (lineVal) lines.add(lineVal);
-                }
+                let rawMac = getColValue(row, 'MAC');
+                const macVal = (rawMac != null && String(rawMac).trim() !== '') ? String(rawMac).trim() : 'ไม่ระบุ MAC';
+                macs.add(macVal);
+                const lineVal = getLineFromMac(macVal);
+                lines.add(lineVal);
 
                 const classVal = getColValue(row, 'CLASS') != null ? String(getColValue(row, 'CLASS')).trim() : '';
                 if (classVal) classes.add(classVal);
 
                 const groupVal = getColValue(row, 'PRODUCT_GROUP') != null ? String(getColValue(row, 'PRODUCT_GROUP')).trim() : '';
                 if (groupVal) groups.add(groupVal);
+
+                // 💡 เก็บค่า Status เพื่อไปเติมใน Slicer
+                const statusVal = getColValue(row, 'PLAN_STATUS') != null ? String(getColValue(row, 'PLAN_STATUS')).trim() : '';
+                if (statusVal) statuses.add(statusVal);
             });
 
             const fillSelect = (selectId, set, monthMap = null) => {
@@ -1054,10 +1242,11 @@
             fillSelect('filterMac', macs);
             fillSelect('filterClass', classes);
             fillSelect('filterGroup', groups);
+            fillSelect('filterStatus', statuses); // 💡 เติมข้อมูลลง Slicer Status
         }
 
         // ========================================================
-        // ฟังก์ชันอัปเดตกระดาน
+        // ฟังก์ชันอัปเดตกระดานหลัก
         // ========================================================
         function updateDashboard() {
             const fYearArr = filterInstances['filterYear'] ? (filterInstances['filterYear'].getValue(true) || []) : [];
@@ -1067,6 +1256,7 @@
             const fMacArr = filterInstances['filterMac'] ? (filterInstances['filterMac'].getValue(true) || []) : [];
             const fClassArr = filterInstances['filterClass'] ? (filterInstances['filterClass'].getValue(true) || []) : [];
             const fGroupArr = filterInstances['filterGroup'] ? (filterInstances['filterGroup'].getValue(true) || []) : [];
+            const fStatusArr = filterInstances['filterStatus'] ? (filterInstances['filterStatus'].getValue(true) || []) : []; // 💡 ดึงค่าที่ถูกเลือก
             
             const fItem = document.getElementById('filterItem').value.trim().toLowerCase();
 
@@ -1074,12 +1264,14 @@
                 let match = true;
                 
                 const dateVal = getColValue(row, 'PRODUCTION_DATE') != null ? getColValue(row, 'PRODUCTION_DATE') : '';
-                const macVal = getColValue(row, 'MAC') != null ? String(getColValue(row, 'MAC')).trim() : '';
-                const lineVal = getLineFromMac(macVal); // คำนวณ Line สำหรับเช็คเงื่อนไข
+                let rawMac = getColValue(row, 'MAC');
+                const macVal = (rawMac != null && String(rawMac).trim() !== '') ? String(rawMac).trim() : 'ไม่ระบุ MAC';
+                const lineVal = getLineFromMac(macVal); 
                 const classVal = getColValue(row, 'CLASS') != null ? String(getColValue(row, 'CLASS')).trim() : '';
                 const rawItemCode = getColValue(row, 'ITEM CODE') || getColValue(row, 'ITEM_CODE');
                 const itemVal = rawItemCode != null ? String(rawItemCode) : '';
                 const groupVal = getColValue(row, 'PRODUCT_GROUP') != null ? String(getColValue(row, 'PRODUCT_GROUP')).trim() : '';
+                const statusVal = getColValue(row, 'PLAN_STATUS') != null ? String(getColValue(row, 'PLAN_STATUS')).trim() : ''; // 💡 ดึงค่า Status ของ row
 
                 const { y: rowYear, m: rowMonth, d: rowDay } = extractDateParts(dateVal);
 
@@ -1093,10 +1285,11 @@
                 if (!checkMatch(fYearArr, rowYear)) match = false;
                 if (!checkMatch(fMonthArr, rowMonth)) match = false;
                 if (!checkMatch(fDayArr, rowDay)) match = false;
-                if (!checkMatch(fLineArr, lineVal)) match = false; // เช็ค Filter Line
+                if (!checkMatch(fLineArr, lineVal)) match = false; 
                 if (!checkMatch(fMacArr, macVal)) match = false;
                 if (!checkMatch(fClassArr, classVal)) match = false;
                 if (!checkMatch(fGroupArr, groupVal)) match = false;
+                if (!checkMatch(fStatusArr, statusVal)) match = false; // 💡 ตรวจสอบตรงกับ Filter ไหม
 
                 if (fItem !== '' && !itemVal.toLowerCase().includes(fItem)) match = false;
 
@@ -1109,7 +1302,8 @@
 
             filteredData.forEach(row => {
                 const dateVal = getColValue(row, 'PRODUCTION_DATE') || '';
-                const macVal = getColValue(row, 'MAC');
+                let rawMac = getColValue(row, 'MAC');
+                const macVal = (rawMac != null && String(rawMac).trim() !== '') ? String(rawMac).trim() : 'ไม่ระบุ MAC';
                 const { y, m, d } = extractDateParts(dateVal);
                 
                 if (y && m && d) {
@@ -1118,17 +1312,25 @@
                     if (dateStr > maxDateStr) maxDateStr = dateStr;
                 }
                 
-                if (macVal && String(macVal).trim() !== '') {
-                    activeMacs.add(String(macVal).trim());
-                }
+                activeMacs.add(macVal);
             });
             
+            const dateInputEl = document.getElementById('dailyPlanDate');
+            if (!dateInputEl.value && maxDateStr !== "0000-00-00") {
+                dateInputEl.value = maxDateStr;
+            }
+            // เรียกฟังก์ชันเพื่ออัปเดตกระดานตามวันที่ได้เลย ไม่ต้องรอโหลดหน้าใหม่ทั้งหมด
+            if(rawData.length > 0) updateDailyPlanBoard();
+
             let orderTrendMode = 'monthly';
             let maxYearStr = maxDateStr !== "0000-00-00" ? maxDateStr.substring(0,4) : new Date().getFullYear().toString();
             
             // 💡 1. คำนวณวันทำงานจริง (Actual Mins) "แยกรายเครื่องจักร" จาก Calendar Map
             const macAvailableMinsDict = {};
             activeMacs.forEach(mac => macAvailableMinsDict[mac] = 0);
+            
+            // เพิ่มการคำนวณจำนวนวันทำงานจริง (totalWorkingDays)
+            let totalWorkingDays = 0;
 
             if (minDateStr !== "9999-99-99" && maxDateStr !== "0000-00-00") {
                 const minD = new Date(minDateStr);
@@ -1144,7 +1346,7 @@
                     const m = String(currentD.getMonth() + 1).padStart(2, '0');
                     const d = String(currentD.getDate()).padStart(2, '0');
                     const dateStr = `${y}-${m}-${d}`;
-                    const dayOfWeek = currentD.getDay(); // 0 = Sun, 6 = Sat
+                    const dayOfWeek = currentD.getDay(); 
 
                     const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
                     let baseMins = isWeekend ? 0 : 480;
@@ -1157,6 +1359,8 @@
                             }
                         });
                     }
+
+                    let dayHasWork = false;
 
                     activeMacs.forEach(mac => {
                         let dailyMins = isGlobalHoliday ? 0 : baseMins;
@@ -1173,7 +1377,10 @@
                             });
                         }
                         macAvailableMinsDict[mac] = (macAvailableMinsDict[mac] || 0) + dailyMins;
+                        if (dailyMins > 0) dayHasWork = true;
                     });
+                    
+                    if (dayHasWork) totalWorkingDays++;
 
                     currentD.setDate(currentD.getDate() + 1);
                 }
@@ -1193,7 +1400,6 @@
             const orderTrendDict = {}; 
             const activeLinesForOrder = new Set();
 
-            // 💡 เปลี่ยนตัวแปรให้เก็บข้อมูลระดับ Production Line แทน MAC
             const lineThroughputData = {};
             const lineYieldData = {};
 
@@ -1207,7 +1413,8 @@
                 const qty = Number(rawQty) || 0;
                 totalQty += qty;
 
-                const macVal = getColValue(row, 'MAC');
+                let rawMac = getColValue(row, 'MAC');
+                const macVal = (rawMac != null && String(rawMac).trim() !== '') ? String(rawMac).trim() : 'ไม่ระบุ MAC';
                 const batchNo = getColValue(row, 'ชื่อเรื่อง') || getColValue(row, 'ORDER_NO');
                 
                 let rawQtyOrder = getColValue(row, 'QTY_ORDER') || getColValue(row, 'QTY ORDER') || getColValue(row, 'ORDER_QTY');
@@ -1254,8 +1461,8 @@
                     }
                 }
 
-                if (macVal && batchNo) {
-                    const macKey = String(macVal).trim();
+                if (batchNo) {
+                    const macKey = macVal;
                     if (!macBatchData[macKey]) {
                         macBatchData[macKey] = { uniqueBatches: new Set(), totalQtyOrder: 0 };
                     }
@@ -1265,8 +1472,8 @@
                     }
                 }
                 
-                if (macVal && batchNo && normalizedDate) {
-                    const macKey = String(macVal).trim();
+                if (batchNo && normalizedDate) {
+                    const macKey = macVal;
 
                     if (!batchCapTrendDict[normalizedDate]) {
                         batchCapTrendDict[normalizedDate] = {};
@@ -1293,7 +1500,6 @@
                     }
                 }
 
-                // 💡 สะสมข้อมูล Throughput & Yield ให้ผูกกับ Line แทน MAC
                 if (lineVal) {
                     if (hasValidTime) {
                         if (!lineThroughputData[lineVal]) lineThroughputData[lineVal] = { totalQty: 0, totalTime: 0 };
@@ -1327,17 +1533,15 @@
                 const remark = getColValue(row, 'PRODUCTION_REMARK') || '';
                 if (String(remark).trim() !== '') issueCount++;
 
-                if (macVal) {
-                    const macKey = String(macVal).trim();
-                    macDict[macKey] = (macDict[macKey] || 0) + qty;
-                    
-                    if (hasValidTime) {
-                        macTotalTimeDict[macKey] = (macTotalTimeDict[macKey] || 0) + time;
-                    }
-                    
-                    if (!macDaysDict[macKey]) macDaysDict[macKey] = new Set();
-                    if (normalizedDate) macDaysDict[macKey].add(normalizedDate);
+                const macKey = macVal;
+                macDict[macKey] = (macDict[macKey] || 0) + qty;
+                
+                if (hasValidTime) {
+                    macTotalTimeDict[macKey] = (macTotalTimeDict[macKey] || 0) + time;
                 }
+                
+                if (!macDaysDict[macKey]) macDaysDict[macKey] = new Set();
+                if (normalizedDate) macDaysDict[macKey].add(normalizedDate);
                 
                 const groupVal = getColValue(row, 'PRODUCT_GROUP');
                 if (groupVal) {
@@ -1379,12 +1583,11 @@
             document.getElementById('kpiTime').innerHTML = `${avgTime} <span class="text-base font-normal text-slate-400">นาที</span>`;
             document.getElementById('kpiIssues').innerHTML = `${issueCount} <span class="text-base font-normal text-slate-400">ครั้ง</span>`;
 
-            // 💡 อัปเดตการ์ด Machine Utilization 
             const macUtilContainer = document.getElementById('macUtilizationContainer');
             const factoryTimeLabel = document.getElementById('factoryTimeLabel');
             
             if (activeMacs.size > 0) {
-                factoryTimeLabel.innerText = `ประมวลผลวันทำงานจริงและ OT แยกตามเครื่องจักร (Per-MAC)`;
+                factoryTimeLabel.innerText = `ประมวลผลวันทำงานจริง ${totalWorkingDays} วัน และ OT แยกตามเครื่องจักร (Per-MAC)`;
                 factoryTimeLabel.classList.remove('bg-slate-100', 'text-slate-500');
                 factoryTimeLabel.classList.add('bg-blue-100', 'text-blue-700');
             } else {
@@ -1561,8 +1764,9 @@
                 const actualData = sortedMacs.map(mac => macDict[mac]);
                 const capData = sortedMacs.map(mac => {
                     const dailyCap = MAC_CAPACITY[mac] || 0;
-                    const daysRan = macDaysDict[mac].size || 1; 
-                    return dailyCap * daysRan;
+                    // 💡 คำนวณความจุตามวันทำงานจริงและ OT ของแต่ละเครื่อง
+                    const availMins = macAvailableMinsDict[mac] || 0;
+                    return (dailyCap / 480) * availMins;
                 });
 
                 machineChartInstance.data.labels = sortedMacs;
@@ -1648,7 +1852,6 @@
                 batchCapChartInstance.update();
             }
 
-            // 💡 อัปเดตกราฟ Throughput เปลี่ยนไปใช้ข้อมูลระดับ Line
             if (throughputChartInstance) {
                 const sortedLinesTP = Object.keys(lineThroughputData).sort((a,b) => {
                     const tpA = lineThroughputData[a].totalQty / (lineThroughputData[a].totalTime / 60);
@@ -1672,7 +1875,6 @@
                 throughputChartInstance.update();
             }
 
-            // 💡 อัปเดตกราฟ Yield % เปลี่ยนไปใช้ข้อมูลระดับ Line
             if (yieldChartInstance) {
                 const sortedLinesY = Object.keys(lineYieldData).sort((a,b) => {
                     const yA = (lineYieldData[a].totalProd / lineYieldData[a].totalOrder) * 100;
@@ -1825,12 +2027,11 @@
                     });
                 }
 
-                // 3. โหลด Sheet MAC_CAP (ทำ Mapping อัตโนมัติจากไฟล์)
+                // 3. โหลด Sheet MAC_CAP
                 const capSheetName = workbook.SheetNames.find(n => n.toLowerCase().includes('mac_cap') || n.toLowerCase().includes('mac cap'));
                 if (capSheetName) {
                     const capRawData = XLSX.utils.sheet_to_json(workbook.Sheets[capSheetName], {raw: true});
                     
-                    // รีเซ็ตค่าเดิมก่อนนำข้อมูลใหม่เข้าไปแทนที่
                     MAC_STD_BATCH_CAP = { 'default': 1000 };
                     MAC_CAPACITY = {};
                     MAC_TO_LINE = {};
