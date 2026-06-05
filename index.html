@@ -4,72 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Factory Production Dashboard</title>
-    
-    <!-- โหลด Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- โหลด Chart.js และ Plugin (แก้ไขลิงก์ DataLabels ให้ถูกต้อง) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
-    
-    <!-- โหลด SheetJS (อ่าน Excel) -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
-    <!-- โหลด Choices.js สำหรับทำ Slicer (Multi-select) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
-        body {
-            font-family: 'Sarabun', sans-serif;
-        }
-        /* Custom scrollbar */
-        .table-container::-webkit-scrollbar, .custom-scrollbar::-webkit-scrollbar {
-            height: 8px; width: 8px;
-        }
-        .table-container::-webkit-scrollbar-track, .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f1f1; border-radius: 4px;
-        }
-        .table-container::-webkit-scrollbar-thumb, .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1; border-radius: 4px;
-        }
-        .table-container::-webkit-scrollbar-thumb:hover, .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8; 
-        }
-
-        /* ปรับแต่งดีไซน์ Choices.js */
+        body { font-family: 'Sarabun', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         .choices { margin-bottom: 0 !important; }
-        .choices[data-type*="select-multiple"] .choices__inner {
-            background-color: #f8fafc !important; border: 1px solid #e2e8f0 !important; border-radius: 0.5rem !important;
-            padding: 4px 6px !important; min-height: 40px !important; display: flex; flex-wrap: wrap; align-items: center;
-        }
-        .choices__list--multiple .choices__item {
-            background-color: #3b82f6 !important; border: 1px solid #2563eb !important; border-radius: 0.25rem !important;
-            padding: 2px 6px !important; font-family: 'Sarabun', sans-serif; font-size: 0.75rem !important; margin-right: 4px !important; margin-bottom: 0 !important;
-        }
-        .choices__input {
-            background-color: transparent !important; margin-bottom: 0 !important; color: #334155 !important; font-family: 'Sarabun', sans-serif;
-        }
-        .choices__list--dropdown {
-            border-radius: 0.5rem !important; border-color: #e2e8f0 !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important; z-index: 50 !important;
-        }
-        .choices__list--dropdown .choices__item {
-            font-size: 0.875rem !important; padding: 8px 12px !important;
-        }
-        .choices__list--dropdown .choices__item--selectable.is-highlighted {
-            background-color: #eff6ff !important; color: #0f172a !important;
-        }
-        .choices[data-type*="select-multiple"] .choices__button {
-            border-left: 1px solid rgba(255,255,255,0.3); margin-left: 6px;
-        }
+        .choices[data-type*="select-multiple"] .choices__inner { background-color: #f8fafc !important; border: 1px solid #e2e8f0 !important; border-radius: 0.5rem !important; padding: 4px 6px !important; min-height: 40px !important; display: flex; flex-wrap: wrap; align-items: center; }
+        .choices__list--multiple .choices__item { background-color: #3b82f6 !important; border: 1px solid #2563eb !important; border-radius: 0.25rem !important; padding: 2px 6px !important; font-family: 'Sarabun', sans-serif; font-size: 0.75rem !important; margin-right: 4px !important; margin-bottom: 0 !important; }
+        .choices__input { background-color: transparent !important; margin-bottom: 0 !important; color: #334155 !important; font-family: 'Sarabun', sans-serif; }
+        .choices__list--dropdown { border-radius: 0.5rem !important; border-color: #e2e8f0 !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important; z-index: 50 !important; }
+        .choices__list--dropdown .choices__item { font-size: 0.875rem !important; padding: 8px 12px !important; }
+        .choices__list--dropdown .choices__item--selectable.is-highlighted { background-color: #eff6ff !important; color: #0f172a !important; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen p-4 md:p-6 lg:p-8">
 
     <div class="max-w-7xl mx-auto space-y-6">
         
-        <!-- Header Section -->
         <header class="bg-white rounded-2xl shadow-sm p-5 md:p-6 border border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
@@ -79,14 +41,13 @@
             </div>
             <div class="flex flex-wrap items-center gap-2 w-full xl:w-auto">
                 <input type="file" id="excelUpload" accept=".xlsx, .xls" class="hidden" />
-                <button onclick="document.getElementById('excelUpload').click()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
+                <button onclick="document.getElementById('excelUpload').click()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                     อัปโหลดไฟล์ Production Dashboard
                 </button>
             </div>
         </header>
 
-        <!-- Filters Section -->
         <div class="bg-white rounded-2xl shadow-sm p-5 border border-slate-100 relative z-40">
             <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3 cursor-pointer hover:opacity-70 transition-opacity" onclick="toggleSection('wrapper-filters', 'icon-filters')">
                 <h3 class="text-sm font-bold text-slate-700 flex items-center gap-2">
@@ -107,34 +68,47 @@
                     <div class="flex flex-col"><label class="text-xs text-slate-500 mb-1 font-medium">ไลน์ผลิต (LINE)</label><select id="filterLine" multiple></select></div>
                     <div class="flex flex-col"><label class="text-xs text-slate-500 mb-1 font-medium">เครื่องจักร (MAC)</label><select id="filterMac" multiple></select></div>
                     <div class="flex flex-col"><label class="text-xs text-slate-500 mb-1 font-medium">คลาส (CLASS)</label><select id="filterClass" multiple></select></div>
-                    <div class="flex flex-col"><label class="text-xs text-slate-500 mb-1 font-medium">รหัสสินค้า (ITEM)</label><input type="text" id="filterItem" placeholder="พิมพ์รหัสสินค้า..." class="bg-slate-50 border border-slate-200 text-sm rounded-lg p-2 focus:outline-none focus:border-blue-500 text-slate-700 w-full" style="min-height: 40px;"></div>
+                    <div class="flex flex-col"><label class="text-xs text-slate-500 mb-1 font-medium">รหัสสินค้า (ITEM)</label><input type="text" id="filterItem" placeholder="เช่น P-001..." class="bg-slate-50 border border-slate-200 text-sm rounded-lg p-2 focus:outline-none focus:border-blue-500 text-slate-700 w-full" style="min-height: 40px;"></div>
                     <div class="flex flex-col"><label class="text-xs text-slate-500 mb-1 font-medium">กลุ่มสินค้า (GROUP)</label><select id="filterGroup" multiple></select></div>
                 </div>
             </div>
         </div>
 
-        <!-- KPIs Section -->
         <div>
             <div class="flex justify-between items-center px-2 mb-3 cursor-pointer hover:bg-slate-200/50 p-2 -mx-2 rounded-lg transition-colors" onclick="toggleSection('wrapper-kpis', 'icon-kpis')">
                 <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2"><span class="text-xl">📊</span> สรุปภาพรวม (KPIs)</h3>
                 <svg id="icon-kpis" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             </div>
-            <div id="wrapper-kpis" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 relative z-30">
-                <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100 relative overflow-hidden group">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div><p class="text-sm font-medium text-slate-500 mb-1">ยอดผลิตรวม (Total QTY)</p><h3 id="kpiTotal" class="text-3xl font-bold text-slate-800">0 <span class="text-base font-normal text-slate-400">KG</span></h3>
-                    <div class="mt-2 text-sm text-green-600 flex items-center gap-1 font-medium"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg><span>รวมทุกเครื่องจักร</span></div>
+            <div id="wrapper-kpis" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 relative z-30">
+                <div class="bg-white rounded-2xl shadow-sm p-5 border border-slate-100 relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                    <p class="text-xs font-medium text-slate-500 mb-1">ยอดผลิตรวม (Total QTY)</p>
+                    <h3 id="kpiTotal" class="text-2xl font-bold text-slate-800">0</h3>
                 </div>
-                <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100 relative overflow-hidden group">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div><p class="text-sm font-medium text-slate-500 mb-1">อัตราสำเร็จ (Completion Rate)</p><h3 id="kpiRate" class="text-3xl font-bold text-slate-800">0<span class="text-2xl">%</span></h3>
-                    <div class="mt-2 text-sm text-slate-500 flex items-center gap-1"><span>อ้างอิงจากแผนทั้งหมด</span></div>
+                <div class="bg-white rounded-2xl shadow-sm p-5 border border-slate-100 relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+                    <p class="text-xs font-medium text-slate-500 mb-1">อัตราสำเร็จ (Completion Rate)</p>
+                    <h3 id="kpiRate" class="text-2xl font-bold text-slate-800">0%</h3>
                 </div>
-                <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100 relative overflow-hidden group">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-purple-500"></div><p class="text-sm font-medium text-slate-500 mb-1">เวลาเฉลี่ย/แบทช์ (Avg. Time)</p><h3 id="kpiTime" class="text-3xl font-bold text-slate-800">0 <span class="text-base font-normal text-slate-400">นาที</span></h3>
-                    <div class="mt-2 text-sm text-amber-600 flex items-center gap-1 font-medium"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span>เฉพาะรายการที่มีเวลาทำงาน</span></div>
+                <div class="bg-white rounded-2xl shadow-sm p-5 border border-slate-100 relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-cyan-500"></div>
+                    <p class="text-xs font-medium text-slate-500 mb-1">วันทำงานจริง (Working Days)</p>
+                    <h3 id="kpiWorkDays" class="text-2xl font-bold text-slate-800">0 <span class="text-sm font-normal text-slate-400">วัน</span></h3>
                 </div>
-                <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100 relative overflow-hidden group">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-rose-500"></div><p class="text-sm font-medium text-slate-500 mb-1">ปัญหาการผลิต (Issues)</p><h3 id="kpiIssues" class="text-3xl font-bold text-slate-800">0 <span class="text-base font-normal text-slate-400">ครั้ง</span></h3>
-                    <div class="mt-2 text-sm text-rose-600 flex items-center gap-1 font-medium"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg><span>ส่งผลให้เกิด Downtime สูง</span></div>
+                <div class="bg-white rounded-2xl shadow-sm p-5 border border-slate-100 relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-orange-500"></div>
+                    <p class="text-xs font-medium text-slate-500 mb-1">ทำล่วงเวลารวม (Total OT)</p>
+                    <h3 id="kpiOT" class="text-2xl font-bold text-slate-800">0 <span class="text-sm font-normal text-slate-400">ชม.</span></h3>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm p-5 border border-slate-100 relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-purple-500"></div>
+                    <p class="text-xs font-medium text-slate-500 mb-1">เวลาเฉลี่ย/แบทช์</p>
+                    <h3 id="kpiTime" class="text-2xl font-bold text-slate-800">0 <span class="text-sm font-normal text-slate-400">นาที</span></h3>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm p-5 border border-slate-100 relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-rose-500"></div>
+                    <p class="text-xs font-medium text-slate-500 mb-1">ปัญหาการผลิต (Issues)</p>
+                    <h3 id="kpiIssues" class="text-2xl font-bold text-slate-800">0 <span class="text-sm font-normal text-slate-400">ครั้ง</span></h3>
                 </div>
             </div>
         </div>
@@ -142,8 +116,10 @@
         <div class="mt-6">
             <div class="flex justify-between items-center px-2 mb-3 cursor-pointer hover:bg-slate-200/50 p-2 -mx-2 rounded-lg transition-colors" onclick="toggleSection('wrapper-dailyplan', 'icon-dailyplan')">
                 <div class="flex items-center gap-4">
-                    <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2"><span class="text-xl">📅</span> กระดานแผนการผลิตรายวัน (Daily Kanban Board)</h3>
-                    <input type="date" id="dailyPlanDate" class="bg-white border border-slate-300 text-sm rounded-lg p-1.5 px-3 focus:outline-none focus:border-blue-500 font-bold text-blue-700 shadow-sm" onclick="event.stopPropagation();" onchange="updateDailyPlanBoard()">
+                    <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                        <span class="text-xl">📅</span> กระดานแผนการผลิตรายวัน (Daily Kanban Board)
+                    </h3>
+                    <input type="date" id="dailyPlanDate" class="bg-white border border-slate-300 text-sm rounded-lg p-1.5 px-3 focus:outline-none focus:border-blue-500 font-bold text-blue-700 cursor-auto shadow-sm" onclick="event.stopPropagation();" onchange="updateDailyPlanBoard()">
                 </div>
                 <svg id="icon-dailyplan" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             </div>
@@ -154,67 +130,23 @@
             </div>
         </div>
 
-        <!-- Machine Utilization Section -->
         <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100 relative z-20 mt-6">
             <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3 cursor-pointer hover:opacity-70 transition-opacity" onclick="toggleSection('wrapper-macutil', 'icon-macutil')">
                 <div class="flex items-center gap-2">
-                    <h3 class="font-bold text-slate-800 flex items-center gap-2"><span class="text-xl">⏱️</span> เวลาเฉลี่ยการทำงานของเครื่องจักรรายวัน (Machine Time Utilization)</h3>
+                    <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                        <span class="text-xl">⏱️</span> อัตราการใช้ประโยชน์เครื่องจักร (True Machine Utilization)
+                    </h3>
                     <span id="factoryTimeLabel" class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">กำลังประมวลผลวันทำงานจริง...</span>
                 </div>
                 <svg id="icon-macutil" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             </div>
-            <div id="wrapper-macutil"><div id="macUtilizationContainer" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"><div class="col-span-full text-center text-slate-500 py-6 font-medium">ยังไม่มีข้อมูล 📊</div></div></div>
-        </div>
-
-        <!-- Batch Capacity Section -->
-        <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100 relative z-20 mt-6">
-            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3 cursor-pointer hover:opacity-70 transition-opacity" onclick="toggleSection('wrapper-batchcap', 'icon-batchcap')">
-                <div class="flex items-center gap-2">
-                    <h3 class="font-bold text-slate-800 flex items-center gap-2"><span class="text-xl">📦</span> จำนวนแบทช์ และประสิทธิภาพความจุ (% Batch Cap)</h3>
-                    <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">อ้างอิง Standard Cap</span>
-                </div>
-                <svg id="icon-batchcap" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-            </div>
-            <div id="wrapper-batchcap"><div id="batchCapContainer" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"><div class="col-span-full text-center text-slate-500 py-6 font-medium">ยังไม่มีข้อมูล 📊</div></div></div>
-        </div>
-
-        <!-- Advanced Performance Section -->
-        <div class="mt-6">
-            <div class="flex justify-between items-center px-2 mb-3 cursor-pointer hover:bg-slate-200/50 p-2 -mx-2 rounded-lg transition-colors" onclick="toggleSection('wrapper-advanced', 'icon-advanced')">
-                <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2"><span class="text-xl">🚀</span> ประสิทธิภาพเชิงลึก (Advanced Performance)</h3>
-                <svg id="icon-advanced" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-            </div>
-            <div id="wrapper-advanced" class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 relative z-10">
-                <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
-                    <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-slate-800">อัตราความเร็วในการผลิตแยกตามไลน์ (Throughput by Line)</h3><span class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">KG / ชั่วโมง</span></div>
-                    <div class="relative h-72 w-full"><canvas id="throughputChart"></canvas></div>
-                </div>
-                <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
-                    <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-slate-800">อัตราความแม่นยำของผลผลิตแยกตามไลน์ (Yield % by Line)</h3><span class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">Actual vs Order</span></div>
-                    <div class="relative h-72 w-full"><canvas id="yieldChart"></canvas></div>
+            <div id="wrapper-macutil">
+                <div id="macUtilizationContainer" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <div class="col-span-full text-center text-slate-500 py-6 font-medium">ยังไม่มีข้อมูล 📊</div>
                 </div>
             </div>
         </div>
 
-        <!-- Washing Media Usage Section -->
-        <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100 relative z-20 mt-6">
-            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3 cursor-pointer hover:opacity-70 transition-opacity" onclick="toggleSection('wrapper-media', 'icon-media')">
-                <h3 class="font-bold text-slate-800 flex items-center gap-2"><span class="text-xl">💧</span> ปริมาณการใช้ Washing Media</h3>
-                <svg id="icon-media" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-            </div>
-            <div id="wrapper-media"><div id="mediaUsageContainer" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"><div class="col-span-full text-center text-slate-500 py-6 font-medium">ยังไม่มีข้อมูล 📊</div></div></div>
-        </div>
-
-        <!-- Status Breakdown Section -->
-        <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100 relative z-20 mt-6">
-            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3 cursor-pointer hover:opacity-70 transition-opacity" onclick="toggleSection('wrapper-status', 'icon-status')">
-                <h3 class="font-bold text-slate-800 flex items-center gap-2"><svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg> รายละเอียดแบทช์แยกตามสถานะ (Batch Details by PLAN_STATUS)</h3>
-                <svg id="icon-status" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-            </div>
-            <div id="wrapper-status"><div id="statusBreakdownContainer" class="max-h-96 overflow-y-auto pr-2 custom-scrollbar"><div class="text-center text-slate-500 py-10 font-medium">ยังไม่มีข้อมูล 📊</div></div></div>
-        </div>
-
-        <!-- Charts Section 1: Actual vs Cap & Status -->
         <div class="mt-6">
             <div class="flex justify-between items-center px-2 mb-3 cursor-pointer hover:bg-slate-200/50 p-2 -mx-2 rounded-lg transition-colors" onclick="toggleSection('wrapper-charts1', 'icon-charts1')">
                 <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2"><span class="text-xl">📈</span> รายงานการผลิตและสถานะ</h3>
@@ -222,12 +154,22 @@
             </div>
             <div id="wrapper-charts1" class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 relative z-10">
                 <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100 lg:col-span-2">
-                    <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-slate-800">ยอดผลิตเปรียบเทียบกำลังการผลิต (Actual vs Capacity)</h3></div>
-                    <div class="relative h-72 w-full"><canvas id="machineChart"></canvas></div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-800">ยอดผลิตเปรียบเทียบกำลังการผลิตแยกตามไลน์ (Actual vs Capacity)</h3>
+                        <span class="text-xs font-semibold text-white bg-blue-500 px-3 py-1 rounded-full shadow-sm">คำนวณเฉพาะเครื่องที่เปิดผลิตจริง</span>
+                    </div>
+                    <div class="relative h-72 w-full">
+                        <canvas id="machineChart"></canvas>
+                    </div>
                 </div>
+
                 <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
-                    <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-slate-800">สถานะแผนการผลิต</h3></div>
-                    <div class="relative h-64 w-full flex justify-center items-center"><canvas id="statusChart"></canvas></div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-800">สถานะแผนการผลิต</h3>
+                    </div>
+                    <div class="relative h-64 w-full flex justify-center items-center">
+                        <canvas id="statusChart"></canvas>
+                    </div>
                     <div class="mt-4 flex justify-center gap-4 text-sm flex-wrap">
                         <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-emerald-400"></span> Completed</div>
                         <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-rose-400"></span> Abort</div>
@@ -237,84 +179,54 @@
             </div>
         </div>
 
-        <!-- Charts Section 1.2: Order QTY Stacked Trend -->
         <div class="mt-6">
-            <div class="flex justify-between items-center px-2 mb-3 cursor-pointer hover:bg-slate-200/50 p-2 -mx-2 rounded-lg transition-colors" onclick="toggleSection('wrapper-orderqty', 'icon-orderqty')">
-                <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2"><span class="text-xl">📊</span> ปริมาณออเดอร์ตามไลน์ผลิต (Order QTY by Line)</h3>
-                <svg id="icon-orderqty" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            <div class="flex justify-between items-center px-2 mb-3 cursor-pointer hover:bg-slate-200/50 p-2 -mx-2 rounded-lg transition-colors" onclick="toggleSection('wrapper-advanced', 'icon-advanced')">
+                <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2"><span class="text-xl">🚀</span> ประสิทธิภาพเชิงลึก (Advanced Performance)</h3>
+                <svg id="icon-advanced" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             </div>
-            <div id="wrapper-orderqty" class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100 relative z-10">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-slate-800">ปริมาณออเดอร์สะสมแยกตามไลน์ (Stacked Order QTY Trend)</h3>
-                    <span class="text-xs font-semibold text-white bg-blue-500 px-3 py-1 rounded-full shadow-sm">หน่วย: x 1,000 | โหมด: <span id="orderTrendModeLabel">อัตโนมัติ</span></span>
-                </div>
-                <div class="relative h-80 w-full"><canvas id="orderQtyChart"></canvas></div>
-            </div>
-        </div>
-
-        <!-- Charts Section 1.5: Batch Cap Comparison Trend -->
-        <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100 relative z-10 mt-6">
-            <div class="flex justify-between items-center mb-4 cursor-pointer hover:opacity-70 transition-opacity" onclick="toggleSection('wrapper-batchtrend', 'icon-batchtrend')">
-                <div><h3 class="font-bold text-slate-800">แนวโน้มประสิทธิภาพความจุแบทช์ (% Batch Capacity Trend)</h3><span class="text-xs text-slate-400">เปรียบเทียบ % ความจุของแต่ละเครื่องจักรตามช่วงเวลา</span></div>
-                <svg id="icon-batchtrend" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-            </div>
-            <div id="wrapper-batchtrend"><div class="relative h-80 w-full"><canvas id="batchCapChart"></canvas></div></div>
-        </div>
-
-        <!-- Charts Section 2 & Table -->
-        <div class="mt-6">
-            <div class="flex justify-between items-center px-2 mb-3 cursor-pointer hover:bg-slate-200/50 p-2 -mx-2 rounded-lg transition-colors" onclick="toggleSection('wrapper-charts2', 'icon-charts2')">
-                <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2"><span class="text-xl">📋</span> กลุ่มสินค้าและปัญหาการผลิต</h3>
-                <svg id="icon-charts2" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-            </div>
-            <div id="wrapper-charts2" class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 relative z-10">
+            <div id="wrapper-advanced" class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 relative z-10">
                 <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
-                    <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-slate-800">กลุ่มสินค้ายอดนิยม (Top Product Groups)</h3></div>
-                    <div class="relative h-72 w-full"><canvas id="groupChart"></canvas></div>
+                    <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-slate-800">อัตราความเร็ว (Throughput)</h3></div>
+                    <div class="relative h-72 w-full"><canvas id="throughputChart"></canvas></div>
                 </div>
-
-                <!-- Table: Problem Logs -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 lg:col-span-2 flex flex-col">
-                    <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-rose-50/30 rounded-t-2xl">
-                        <h3 class="font-bold text-slate-800 flex items-center gap-2"><span class="text-rose-500">🚨</span> บันทึกปัญหาการผลิต (Production Remarks & Downtime)</h3>
-                        <span class="bg-rose-100 text-rose-700 text-xs font-bold px-3 py-1 rounded-full">Need Attention</span>
-                    </div>
-                    <div class="p-0 overflow-x-auto table-container flex-grow">
-                        <table class="w-full text-left border-collapse whitespace-nowrap">
-                            <thead>
-                                <tr class="bg-slate-50 text-slate-500 text-sm border-b border-slate-200">
-                                    <th class="py-3 px-6 font-medium">Order No</th>
-                                    <th class="py-3 px-6 font-medium">Machine</th>
-                                    <th class="py-3 px-6 font-medium">Item Name</th>
-                                    <th class="py-3 px-6 font-medium">Remark / Issue</th>
-                                    <th class="py-3 px-6 font-medium text-center">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="problemTableBody" class="text-sm divide-y divide-slate-100"></tbody>
-                        </table>
-                    </div>
+                <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
+                    <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-slate-800">ความแม่นยำผลผลิต (Yield %)</h3></div>
+                    <div class="relative h-72 w-full"><canvas id="yieldChart"></canvas></div>
                 </div>
             </div>
         </div>
 
-        <!-- Charts Section 3: Trend -->
-        <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100 relative z-10 mt-6">
-            <div class="flex justify-between items-center mb-4 cursor-pointer hover:opacity-70 transition-opacity" onclick="toggleSection('wrapper-trend', 'icon-trend')">
-                <div><h3 class="font-bold text-slate-800">แนวโน้มปริมาณการผลิตรายวัน (Daily Production Trend)</h3><span class="text-xs text-slate-400">สัมพันธ์กับตัวกรองที่เลือก</span></div>
-                <svg id="icon-trend" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        <div class="mt-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col">
+                <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-rose-50/30 rounded-t-2xl">
+                    <h3 class="font-bold text-slate-800 flex items-center gap-2"><span class="text-rose-500">🚨</span> บันทึกปัญหาการผลิต (Production Remarks & Downtime)</h3>
+                </div>
+                <div class="p-0 overflow-x-auto custom-scrollbar flex-grow">
+                    <table class="w-full text-left border-collapse whitespace-nowrap">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-sm border-b border-slate-200">
+                                <th class="py-3 px-6 font-medium">Batch No / Title</th>
+                                <th class="py-3 px-6 font-medium">Machine</th>
+                                <th class="py-3 px-6 font-medium">Item Name</th>
+                                <th class="py-3 px-6 font-medium">Remark / Issue</th>
+                                <th class="py-3 px-6 font-medium text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="problemTableBody" class="text-sm divide-y divide-slate-100">
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div id="wrapper-trend"><div class="relative h-80 w-full"><canvas id="trendChart"></canvas></div></div>
         </div>
 
     </div>
 
-    <!-- UI Modals -->
     <div id="alertModal" class="fixed inset-0 bg-slate-900 bg-opacity-50 hidden flex items-center justify-center z-50 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl shadow-xl p-6 w-11/12 max-w-sm text-center border border-slate-100">
             <div id="alertIcon" class="text-5xl mb-4"></div>
             <h3 id="alertTitle" class="text-xl font-bold text-slate-800 mb-2"></h3>
             <p id="alertMessage" class="text-sm text-slate-600 mb-6 whitespace-pre-line"></p>
-            <button onclick="closeAlertModal()" class="px-6 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-sm font-medium transition-colors w-full shadow-sm">รับทราบ</button>
+            <button onclick="closeAlertModal()" class="px-6 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-sm w-full shadow-sm">รับทราบ</button>
         </div>
     </div>
 
@@ -323,43 +235,24 @@
             const wrapper = document.getElementById(wrapperId);
             const icon = document.getElementById(iconId);
             if (wrapper.classList.contains('hidden')) {
-                wrapper.classList.remove('hidden');
-                icon.classList.add('rotate-180');
+                wrapper.classList.remove('hidden'); icon.classList.add('rotate-180');
                 setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 10);
-            } else {
-                wrapper.classList.add('hidden');
-                icon.classList.remove('rotate-180');
-            }
+            } else { wrapper.classList.add('hidden'); icon.classList.remove('rotate-180'); }
         }
 
         Chart.defaults.font.family = "'Sarabun', sans-serif";
         Chart.defaults.color = '#64748b';
-        
-        // Register DataLabels
-        if (typeof ChartDataLabels !== 'undefined') {
-            Chart.register(ChartDataLabels);
-            Chart.defaults.plugins.datalabels.display = false; 
-        }
+        Chart.register(ChartDataLabels);
+        Chart.defaults.plugins.datalabels.display = false; 
 
-        let machineChartInstance = null, orderQtyChartInstance = null, batchCapChartInstance = null;
-        let throughputChartInstance = null, yieldChartInstance = null, statusChartInstance = null;
-        let groupChartInstance = null, trendChartInstance = null;
-
-        let rawData = [];
-        let calendarMap = {}; 
+        let machineChartInstance = null; let throughputChartInstance = null; let yieldChartInstance = null; let statusChartInstance = null;
+        let rawData = []; let calendarMap = {}; 
 
         let MAC_STD_BATCH_CAP = { 'default': 1000 };
-        let MAC_CAPACITY = {};
-        let MAC_TO_LINE = {};
+        let MAC_CAPACITY = {}; let MAC_TO_LINE = {};
 
-        function getStdBatchCap(macName) {
-            return MAC_STD_BATCH_CAP[macName] || MAC_STD_BATCH_CAP['default'];
-        }
-
-        function getLineFromMac(mac) {
-            if (!mac || mac === 'ไม่ระบุ MAC') return 'อื่นๆ (Other)';
-            return MAC_TO_LINE[mac] || 'อื่นๆ (Other)';
-        }
+        function getStdBatchCap(macName) { return MAC_STD_BATCH_CAP[macName] || MAC_STD_BATCH_CAP['default']; }
+        function getLineFromMac(mac) { return (!mac || mac === 'ไม่ระบุ MAC') ? 'อื่นๆ (Other)' : (MAC_TO_LINE[mac] || 'อื่นๆ (Other)'); }
 
         // --- Initialize Charts Safely ---
         const elMachine = document.getElementById('machineChart');
@@ -369,8 +262,16 @@
                 data: {
                     labels: [],
                     datasets: [
-                        { type: 'bar', label: 'ยอดผลิตจริง (Actual QTY)', data: [], backgroundColor: 'rgba(59, 130, 246, 0.8)', hoverBackgroundColor: 'rgba(37, 99, 235, 1)', borderRadius: 4, barThickness: 32, order: 2 },
-                        { type: 'line', label: 'กำลังผลิตสูงสุด (Max Capacity)', data: [], borderColor: 'rgba(239, 68, 68, 1)', backgroundColor: 'rgba(239, 68, 68, 1)', borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, fill: false, borderDash: [5, 5], order: 1 }
+                        {
+                            type: 'bar', label: 'ยอดผลิตจริง (Actual QTY)', data: [],
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)', hoverBackgroundColor: 'rgba(37, 99, 235, 1)', 
+                            borderRadius: 4, barThickness: 40, order: 2
+                        },
+                        {
+                            type: 'line', label: 'เป้ากำลังผลิตสูงสุด (Max Capacity)', data: [],
+                            borderColor: 'rgba(239, 68, 68, 1)', backgroundColor: 'rgba(239, 68, 68, 1)',
+                            borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, fill: false, borderDash: [5, 5], order: 1
+                        }
                     ]
                 },
                 options: { 
@@ -378,22 +279,34 @@
                     plugins: {
                         legend: { display: true, position: 'top', labels: { font: { family: "'Sarabun', sans-serif", size: 12 } } },
                         tooltip: {
-                            backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12, titleFont: { size: 14, family: "'Sarabun', sans-serif" }, bodyFont: { size: 13, family: "'Sarabun', sans-serif" },
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12,
+                            titleFont: { size: 14, family: "'Sarabun', sans-serif" }, bodyFont: { size: 13, family: "'Sarabun', sans-serif" },
                             callbacks: {
                                 label: function(context) { return ` ${context.dataset.label}: ${context.parsed.y.toLocaleString()} KG`; },
                                 afterLabel: function(context) {
                                     const actual = context.chart.data.datasets[0].data[context.dataIndex] || 0;
                                     const cap = context.chart.data.datasets[1].data[context.dataIndex] || 0;
+                                    const lineName = context.label;
+                                    
                                     if (cap > 0 && context.datasetIndex === 0) { 
                                         const diff = cap - actual;
                                         const percent = ((actual / cap) * 100).toFixed(1);
                                         const diffPercent = Math.abs((diff / cap) * 100).toFixed(1);
+                                        
+                                        // 💡 ดึงค่า วันทำงาน และ OT จาก Window (เก็บตอนอัปเดต)
+                                        const days = (window.currentLineDays && window.currentLineDays[lineName]) ? window.currentLineDays[lineName].size : 0;
+                                        const otMins = (window.currentLineOT && window.currentLineOT[lineName]) ? window.currentLineOT[lineName] : 0;
+                                        const otHours = (otMins / 60).toFixed(1);
+                                        
                                         let lines = [];
                                         lines.push(` ----------------------------------`);
+                                        lines.push(` ⏱️ ทำงานจริง: ${days} วัน (OT: ${otHours} ชม.)`);
                                         lines.push(` 📊 ประสิทธิภาพ (Efficiency): ${percent}%`);
+                                        
                                         if (diff > 0) lines.push(` 📉 ส่วนต่าง: ต่ำกว่าเป้า ${diff.toLocaleString()} KG (${diffPercent}%)`);
                                         else if (diff < 0) lines.push(` 📈 ส่วนต่าง: ทะลุเป้า ${Math.abs(diff).toLocaleString()} KG (+${diffPercent}%)`);
                                         else lines.push(` ✅ ส่วนต่าง: พอดีเป้าหมาย (0%)`);
+                                        
                                         return lines;
                                     }
                                     return null;
@@ -401,60 +314,7 @@
                             }
                         }
                     },
-                    scales: { y: { beginAtZero: true, grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false } }, x: { grid: { display: false, drawBorder: false } } } 
-                }
-            });
-        }
-
-        const elOrderQty = document.getElementById('orderQtyChart');
-        if (elOrderQty) {
-            orderQtyChartInstance = new Chart(elOrderQty.getContext('2d'), {
-                type: 'bar',
-                data: { labels: [], datasets: [] },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: true, position: 'top', labels: { font: { family: "'Sarabun', sans-serif", size: 11 }, usePointStyle: true, boxWidth: 8 } },
-                        datalabels: {
-                            display: function(context) { return context.dataset.data[context.dataIndex] >= 1; },
-                            color: '#ffffff', align: 'center', anchor: 'center',
-                            font: { family: "'Sarabun', sans-serif", weight: 'bold', size: 10 },
-                            formatter: function(value, context) { return context.dataset.label + '\n' + value.toLocaleString(undefined, {maximumFractionDigits: 1}); },
-                            textAlign: 'center'
-                        },
-                        tooltip: {
-                            mode: 'index', intersect: false, backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12,
-                            titleFont: { size: 14, family: "'Sarabun', sans-serif" }, bodyFont: { size: 13, family: "'Sarabun', sans-serif" },
-                            callbacks: { label: function(context) { return ` ${context.dataset.label}: ${context.parsed.y.toLocaleString()} (x 1,000)`; } }
-                        }
-                    },
-                    scales: {
-                        x: { stacked: true, grid: { display: false, drawBorder: false } },
-                        y: { stacked: true, beginAtZero: true, grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false }, title: { display: true, text: 'ปริมาณ (x 1,000)', font: { family: "'Sarabun', sans-serif" } } }
-                    }
-                }
-            });
-        }
-
-        const elBatchCap = document.getElementById('batchCapChart');
-        if (elBatchCap) {
-            batchCapChartInstance = new Chart(elBatchCap.getContext('2d'), {
-                type: 'line',
-                data: { labels: [], datasets: [] },
-                options: { 
-                    responsive: true, maintainAspectRatio: false,
-                    interaction: { mode: 'index', intersect: false },
-                    plugins: {
-                        legend: { display: true, position: 'top', labels: { font: { family: "'Sarabun', sans-serif", size: 11 }, usePointStyle: true, boxWidth: 8 } },
-                        tooltip: {
-                            backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12, titleFont: { size: 14, family: "'Sarabun', sans-serif" }, bodyFont: { size: 13, family: "'Sarabun', sans-serif" },
-                            callbacks: { label: function(context) { return ` ${context.dataset.label}: ${context.parsed.y}%`; } }
-                        }
-                    },
-                    scales: { 
-                        y: { beginAtZero: true, max: 150, grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false }, title: { display: true, text: 'ประสิทธิภาพ (%)', font: { family: "'Sarabun', sans-serif" } } },
-                        x: { grid: { display: false, drawBorder: false } }
-                    } 
+                    scales: { y: { beginAtZero: true, grid: { borderDash: [4, 4] } }, x: { grid: { display: false } } } 
                 }
             });
         }
@@ -462,38 +322,16 @@
         const elThroughput = document.getElementById('throughputChart');
         if (elThroughput) {
             throughputChartInstance = new Chart(elThroughput.getContext('2d'), {
-                type: 'bar',
-                data: { labels: [], datasets: [] },
-                options: { 
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12, titleFont: { size: 14, family: "'Sarabun', sans-serif" }, bodyFont: { size: 13, family: "'Sarabun', sans-serif" },
-                            callbacks: { label: function(context) { return ` ความเร็ว: ${context.parsed.y.toLocaleString()} KG/Hr`; } }
-                        }
-                    },
-                    scales: { y: { beginAtZero: true, grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false } }, x: { grid: { display: false, drawBorder: false } } } 
-                }
+                type: 'bar', data: { labels: [], datasets: [] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
         }
 
         const elYield = document.getElementById('yieldChart');
         if (elYield) {
             yieldChartInstance = new Chart(elYield.getContext('2d'), {
-                type: 'bar',
-                data: { labels: [], datasets: [] },
-                options: { 
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12, titleFont: { size: 14, family: "'Sarabun', sans-serif" }, bodyFont: { size: 13, family: "'Sarabun', sans-serif" },
-                            callbacks: { label: function(context) { return ` Yield: ${context.parsed.y}%`; } }
-                        }
-                    },
-                    scales: { y: { beginAtZero: true, grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false } }, x: { grid: { display: false, drawBorder: false } } } 
-                }
+                type: 'bar', data: { labels: [], datasets: [] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
         }
 
@@ -503,252 +341,119 @@
                 type: 'doughnut',
                 data: {
                     labels: ['Completed', 'Abort', 'Reserved'],
-                    datasets: [{ data: [0, 0, 0], backgroundColor: ['rgba(52, 211, 153, 0.9)', 'rgba(251, 113, 133, 0.9)', 'rgba(251, 191, 36, 0.9)'], borderWidth: 0, hoverOffset: 4 }]
+                    datasets: [{ data: [0, 0, 0], backgroundColor: ['rgba(52, 211, 153, 0.9)', 'rgba(251, 113, 133, 0.9)', 'rgba(251, 191, 36, 0.9)'], borderWidth: 0 }]
                 },
-                options: { 
-                    responsive: true, maintainAspectRatio: false, cutout: '75%',
-                    plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12, titleFont: { size: 14 }, bodyFont: { size: 13 } } }
-                }
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } }
             });
         }
 
-        const elGroup = document.getElementById('groupChart');
-        if (elGroup) {
-            groupChartInstance = new Chart(elGroup.getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: [],
-                    datasets: [{ label: 'Batch Count', data: [], backgroundColor: 'rgba(245, 158, 11, 0.8)', hoverBackgroundColor: 'rgba(217, 119, 6, 1)', borderRadius: 6, borderSkipped: false, barThickness: 20 }]
-                },
-                options: { 
-                    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12, callbacks: { label: function(context) { return ' จำนวน: ' + context.parsed.x + ' แบทช์'; } } }
-                    },
-                    scales: { x: { beginAtZero: true, grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false } }, y: { grid: { display: false, drawBorder: false } } } 
-                }
-            });
-        }
-
-        const elTrend = document.getElementById('trendChart');
-        if (elTrend) {
-            trendChartInstance = new Chart(elTrend.getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: [],
-                    datasets: [{ label: 'ยอดผลิต (QTY)', data: [], backgroundColor: 'rgba(14, 165, 233, 0.8)', hoverBackgroundColor: 'rgba(2, 132, 199, 1)', borderRadius: 4, barThickness: 'flex', maxBarThickness: 40 }]
-                },
-                options: { 
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12, titleFont: { size: 14, family: "'Sarabun', sans-serif" }, bodyFont: { size: 13, family: "'Sarabun', sans-serif" }, callbacks: { label: function(context) { return ` ยอดผลิต: ${context.parsed.y.toLocaleString()} KG`; } } }
-                    },
-                    scales: { y: { beginAtZero: true, grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false } }, x: { grid: { display: false, drawBorder: false } } } 
-                }
-            });
-        }
-
+        // --- Helper Functions ---
         function extractDateParts(dateString) {
-            if (dateString === null || dateString === undefined || dateString === '') return { y: '', m: '', d: '' };
+            if (!dateString) return { y: '', m: '', d: '' };
             if (typeof dateString === 'number' || (!isNaN(dateString) && Number(dateString) > 10000)) {
                 const excelEpoch = new Date(Date.UTC(1899, 11, 30));
-                const serial = Math.floor(Number(dateString));
-                const parsedDate = new Date(excelEpoch.getTime() + serial * 86400000);
-                const y = String(parsedDate.getUTCFullYear());
-                const m = String(parsedDate.getUTCMonth() + 1).padStart(2, '0');
-                const d = String(parsedDate.getUTCDate()).padStart(2, '0');
-                return { y, m, d };
+                const parsedDate = new Date(excelEpoch.getTime() + Math.floor(Number(dateString)) * 86400000);
+                return { y: String(parsedDate.getUTCFullYear()), m: String(parsedDate.getUTCMonth() + 1).padStart(2, '0'), d: String(parsedDate.getUTCDate()).padStart(2, '0') };
             }
-
             let s = String(dateString).trim().split(' ')[0].split('T')[0]; 
-            let y = '', m = '', d = '';
-            let p = [];
-            if (s.includes('/')) p = s.split('/');
-            else if (s.includes('-')) p = s.split('-');
-
+            let p = s.includes('/') ? s.split('/') : s.split('-');
             if (p.length === 3) {
-                p = p.map(x => x.trim()); 
-                if (p[0].length === 4) { y = p[0]; m = p[1]; d = p[2]; } 
-                else { d = p[0]; m = p[1]; y = p[2]; }
-                if (parseInt(m) > 12 && parseInt(d) <= 12) { let temp = d; d = m; m = temp; }
-                if (y.length === 2) {
-                    let yn = parseInt(y);
-                    if (yn >= 50 && yn <= 99) y = String(2500 + yn - 543);
-                    else y = '20' + y;
-                }
+                let y = p[0].length === 4 ? p[0] : p[2], m = p[0].length === 4 ? p[1] : p[1], d = p[0].length === 4 ? p[2] : p[0];
+                if (parseInt(y) < 100) y = '20' + y;
                 if (parseInt(y) >= 2500) y = String(parseInt(y) - 543);
-                d = d.padStart(2, '0'); m = m.padStart(2, '0');
+                return { y, m: m.padStart(2, '0'), d: d.padStart(2, '0') };
             }
-            return { y, m, d };
+            return { y: '', m: '', d: '' };
         }
 
         function formatExcelDateTime(val) {
-            if (val === null || val === undefined || val === '') return '-';
+            if (!val) return '-';
             if (typeof val === 'number') {
                 const excelEpoch = new Date(Date.UTC(1899, 11, 30));
-                const parsedDate = new Date(excelEpoch.getTime() + val * 86400000);
-                const d = String(parsedDate.getUTCDate()).padStart(2, '0');
-                const m = String(parsedDate.getUTCMonth() + 1).padStart(2, '0');
-                const y = parsedDate.getUTCFullYear();
-                const hh = String(parsedDate.getUTCHours()).padStart(2, '0');
-                const mm = String(parsedDate.getUTCMinutes()).padStart(2, '0');
-                if (val < 1) return `${hh}:${mm}`; 
-                if (val % 1 !== 0) return `${d}/${m}/${y} ${hh}:${mm}`; 
-                return `${d}/${m}/${y}`; 
+                const d = new Date(excelEpoch.getTime() + val * 86400000);
+                return `${String(d.getUTCDate()).padStart(2,'0')}/${String(d.getUTCMonth()+1).padStart(2,'0')}/${d.getUTCFullYear()} ${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}`; 
             }
             return String(val).replace('T', ' '); 
         }
 
         function extractTimeOnly(val) {
             const str = formatExcelDateTime(val);
-            if (str === '-') return '-';
-            if (str.includes(' ')) return str.split(' ')[1]; 
-            return str;
+            return str.includes(' ') ? str.split(' ')[1] : str;
         }
 
         function getColValue(row, columnName) {
             if (row[columnName] !== undefined) return row[columnName];
             const target = columnName.toLowerCase();
-            for (let key in row) {
-                if (key.trim().toLowerCase() === target) return row[key];
-            }
+            for (let key in row) { if (key.trim().toLowerCase() === target) return row[key]; }
             return undefined;
         }
 
-        let filterInstances = {};
-        function initFilters() {
-            const filterIds = ['filterYear', 'filterMonth', 'filterDay', 'filterLine', 'filterMac', 'filterClass', 'filterGroup'];
-            filterIds.forEach(id => {
-                const el = document.getElementById(id);
-                filterInstances[id] = new Choices(el, { removeItemButton: true, searchPlaceholderValue: 'พิมพ์ค้นหา...', itemSelectText: '', noResultsText: 'ไม่พบข้อมูลที่ค้นหา', noChoicesText: 'ไม่มีข้อมูล', placeholder: true, placeholderValue: 'ทั้งหมด' });
-                el.addEventListener('change', updateDashboard);
-            });
-            document.getElementById('filterItem').addEventListener('keyup', updateDashboard);
-        }
-
-        function populateDropdowns(data) {
-            const years = new Set(), months = new Set(), days = new Set(), lines = new Set(), macs = new Set(), classes = new Set(), groups = new Set();
-            data.forEach(row => {
-                const dateVal = getColValue(row, 'PRODUCTION_DATE') != null ? getColValue(row, 'PRODUCTION_DATE') : '';
-                const { y, m, d } = extractDateParts(dateVal);
-                if (y) years.add(y);
-                if (m) months.add(m);
-                if (d) days.add(d);
-
-                const macVal = getColValue(row, 'MAC') != null ? String(getColValue(row, 'MAC')).trim() : '';
-                if (macVal) {
-                    macs.add(macVal);
-                    const lineVal = getLineFromMac(macVal);
-                    if (lineVal) lines.add(lineVal);
-                }
-
-                const classVal = getColValue(row, 'CLASS') != null ? String(getColValue(row, 'CLASS')).trim() : '';
-                if (classVal) classes.add(classVal);
-
-                const groupVal = getColValue(row, 'PRODUCT_GROUP') != null ? String(getColValue(row, 'PRODUCT_GROUP')).trim() : '';
-                if (groupVal) groups.add(groupVal);
-            });
-
-            const fillSelect = (selectId, set, monthMap = null) => {
-                const instance = filterInstances[selectId];
-                if (!instance) return;
-                const currentValues = instance.getValue(true) || [];
-                instance.clearStore(); 
-                let choices = [];
-                Array.from(set).sort().forEach(val => {
-                    let displayVal = val;
-                    if (monthMap && monthMap[val]) displayVal = `${val} - ${monthMap[val]}`;
-                    choices.push({ value: val, label: displayVal, selected: currentValues.includes(val) });
-                });
-                choices.push({ value: 'empty', label: 'ค่าว่าง (Blank)', selected: currentValues.includes('empty') });
-                instance.setChoices(choices, 'value', 'label', true);
-            };
-
-            const monthNames = { '01': 'มกราคม', '02': 'กุมภาพันธ์', '03': 'มีนาคม', '04': 'เมษายน', '05': 'พฤษภาคม', '06': 'มิถุนายน', '07': 'กรกฎาคม', '08': 'สิงหาคม', '09': 'กันยายน', '10': 'ตุลาคม', '11': 'พฤศจิกายน', '12': 'ธันวาคม' };
-            fillSelect('filterYear', years); fillSelect('filterMonth', months, monthNames); fillSelect('filterDay', days); fillSelect('filterLine', lines); fillSelect('filterMac', macs); fillSelect('filterClass', classes); fillSelect('filterGroup', groups);
-        }
-
+        // ========================================================
+        // 💡 ระบบ Daily Plan Board (Kanban)
+        // ========================================================
         function updateDailyPlanBoard() {
             const dateInput = document.getElementById('dailyPlanDate').value;
             const container = document.getElementById('dailyPlanContainer');
-            if (!dateInput) { container.innerHTML = `<div class="text-center text-slate-500 py-10 font-medium">กรุณาเลือกวันที่ เพื่อดูแผนการผลิต 📊</div>`; return; }
+            if (!dateInput) { container.innerHTML = `<div class="text-center py-10 text-slate-500">กรุณาเลือกวันที่</div>`; return; }
 
             const dailyData = rawData.filter(row => {
                 const dateVal = getColValue(row, 'PRODUCTION_DATE') || getColValue(row, 'PROD_TIME_START');
                 const { y, m, d } = extractDateParts(dateVal);
-                if (!y) return false;
                 return `${y}-${m}-${d}` === dateInput;
             });
 
-            if (dailyData.length === 0) { container.innerHTML = `<div class="text-center text-slate-500 py-10 font-medium bg-white rounded-xl">ไม่พบแผนการผลิตในวันที่ ${dateInput} 📭</div>`; return; }
+            if (dailyData.length === 0) { container.innerHTML = `<div class="text-center py-10 text-slate-500 bg-white rounded-xl">ไม่พบแผนการผลิตในวันที่เลือก 📭</div>`; return; }
 
             const boardData = {};
             dailyData.forEach(row => {
-                let rawMac = getColValue(row, 'MAC');
-                const macVal = (rawMac != null && String(rawMac).trim() !== '') ? String(rawMac).trim() : 'ไม่ระบุ MAC';
+                let macVal = getColValue(row, 'MAC'); macVal = (macVal) ? String(macVal).trim() : 'ไม่ระบุ MAC';
                 const lineVal = getLineFromMac(macVal);
                 
                 if (!boardData[lineVal]) boardData[lineVal] = {};
                 if (!boardData[lineVal][macVal]) boardData[lineVal][macVal] = [];
 
-                let rawQtyOrder = getColValue(row, 'QTY_ORDER') || getColValue(row, 'QTY ORDER') || getColValue(row, 'ORDER_QTY');
-                let qtyOrder = Number(String(rawQtyOrder).replace(/,/g, '').trim()) || 0;
-
-                const statusVal = getColValue(row, 'PLAN_STATUS') || '';
-                const st = String(statusVal).toLowerCase();
-                let statusColor = 'border-blue-400 bg-white';
-                let statusBg = 'bg-blue-100 text-blue-700';
-                
-                if (st.includes('complete') || st.includes('7')) { statusColor = 'border-emerald-500 bg-emerald-50'; statusBg = 'bg-emerald-500 text-white'; } 
+                let qtyOrder = Number(String(getColValue(row, 'QTY_ORDER') || getColValue(row, 'QTY ORDER') || getColValue(row, 'ORDER_QTY') || 0).replace(/,/g, '')) || 0;
+                const statusVal = getColValue(row, 'PLAN_STATUS') || ''; const st = String(statusVal).toLowerCase();
+                let statusColor = 'border-blue-400 bg-white', statusBg = 'bg-blue-100 text-blue-700';
+                if (st.includes('complete') || st.includes('7')) { statusColor = 'border-emerald-500 bg-emerald-50'; statusBg = 'bg-emerald-500 text-white'; }
                 else if (st.includes('abort') || st.includes('issue')) { statusColor = 'border-rose-500 bg-rose-50'; statusBg = 'bg-rose-500 text-white'; }
 
-                // 💡 นำ Title/ชื่อเรื่อง มาเป็น Header ของ Kanban Board
-                const batchNoTitle = getColValue(row, 'Title') || getColValue(row, 'ชื่อเรื่อง') || getColValue(row, 'Batch No') || getColValue(row, 'ORDER_NO') || '-';
+                // 💡 แก้ไขหัวการ์ดให้ดึงคอลัมน์ชื่อเรื่อง (Title)
+                const titleVal = getColValue(row, 'ชื่อเรื่อง') || getColValue(row, 'Title') || getColValue(row, 'Batch No') || getColValue(row, 'ORDER_NO') || '-';
 
                 boardData[lineVal][macVal].push({
-                    orderNo: batchNoTitle,
+                    title: titleVal,
                     itemName: getColValue(row, 'ITEM_NAME') || '-',
                     timeStart: extractTimeOnly(getColValue(row, 'PROD_TIME_START')),
                     timeFinish: extractTimeOnly(getColValue(row, 'PROD_TIME_FINISH')),
-                    qty: qtyOrder,
-                    statusText: statusVal || 'Pending',
-                    statusColor: statusColor,
-                    statusBg: statusBg,
-                    rawStart: getColValue(row, 'PROD_TIME_START') || 0 
+                    qty: qtyOrder, statusText: statusVal || 'Pending', statusColor, statusBg, rawStart: getColValue(row, 'PROD_TIME_START') || 0 
                 });
             });
 
             let htmlOut = '';
             Object.keys(boardData).sort().forEach(line => {
-                htmlOut += `<div class="mb-8 last:mb-0"><h4 class="font-bold text-xl text-slate-800 mb-4 flex items-center gap-2"><span class="w-1.5 h-6 bg-blue-600 rounded-full inline-block"></span> Line: ${line}</h4><div class="flex overflow-x-auto gap-4 pb-4 px-1 custom-scrollbar snap-x">`;
+                htmlOut += `<div class="mb-8"><h4 class="font-bold text-xl text-slate-800 mb-4 border-l-4 border-blue-600 pl-2">Line: ${line}</h4><div class="flex overflow-x-auto gap-4 pb-4 px-1 custom-scrollbar snap-x">`;
                 Object.keys(boardData[line]).sort().forEach(mac => {
-                    const batches = boardData[line][mac];
-                    batches.sort((a,b) => { if(a.rawStart < b.rawStart) return -1; if(a.rawStart > b.rawStart) return 1; return 0; });
-                    const stdCap = getStdBatchCap(mac);
+                    const batches = boardData[line][mac].sort((a,b) => a.rawStart < b.rawStart ? -1 : 1);
                     const totalQtyToday = batches.reduce((sum, b) => sum + b.qty, 0);
-                    const dailyMaxCap = MAC_CAPACITY[mac] || (stdCap * 10); 
-                    let pctCap = dailyMaxCap > 0 ? Math.round((totalQtyToday / dailyMaxCap) * 100) : 0;
-                    let capColor = pctCap > 100 ? 'bg-rose-500' : 'bg-blue-500';
-                    const jobText = batches.length > 1 ? 'Jobs' : 'Job';
-
-                    htmlOut += `
-                        <div class="min-w-[320px] max-w-[320px] bg-slate-200/60 p-4 rounded-xl shrink-0 snap-start border border-slate-200 shadow-sm flex flex-col max-h-[600px]">
-                            <div class="flex justify-between items-center mb-2"><h5 class="font-bold text-slate-800 text-lg">${mac}</h5><span class="bg-white text-slate-600 text-xs font-bold px-2 py-1 rounded shadow-sm">${batches.length} ${jobText}</span></div>
-                            <div class="mb-4"><div class="flex justify-between text-[10px] text-slate-500 mb-1 font-medium"><span>โหลดงานวันนี้: ${totalQtyToday.toLocaleString()} KG</span><span>${pctCap}%</span></div><div class="w-full bg-slate-300 rounded-full h-1.5"><div class="${capColor} h-1.5 rounded-full" style="width: ${Math.min(pctCap, 100)}%"></div></div></div>
-                            <div class="overflow-y-auto custom-scrollbar flex-grow pr-1">
-                    `;
+                    const pctCap = MAC_CAPACITY[mac] > 0 ? Math.round((totalQtyToday / MAC_CAPACITY[mac]) * 100) : 0;
+                    
+                    htmlOut += `<div class="min-w-[320px] max-w-[320px] bg-slate-200/60 p-4 rounded-xl shrink-0 snap-start border border-slate-200 shadow-sm flex flex-col max-h-[600px]">
+                                    <div class="flex justify-between items-center mb-2"><h5 class="font-bold text-slate-800 text-lg">${mac}</h5><span class="bg-white text-xs font-bold px-2 py-1 rounded shadow-sm">${batches.length} Jobs</span></div>
+                                    <div class="mb-4"><div class="w-full bg-slate-300 rounded-full h-1.5"><div class="${pctCap > 100 ? 'bg-rose-500' : 'bg-blue-500'} h-1.5 rounded-full" style="width: ${Math.min(pctCap, 100)}%"></div></div></div>
+                                    <div class="overflow-y-auto custom-scrollbar flex-grow pr-1">`;
                     batches.forEach(b => {
-                        htmlOut += `
-                                <div class="p-3 rounded-lg shadow-sm mb-3 border-l-4 ${b.statusColor} hover:shadow-md transition-shadow relative group">
-                                    <div class="flex justify-between items-start mb-1.5"><div class="font-semibold text-slate-800 text-sm truncate pr-2" title="${b.orderNo}">${b.orderNo}</div><span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${b.statusBg}">${b.statusText}</span></div>
-                                    <div class="text-xs text-slate-600 font-medium mb-1 line-clamp-2" title="${b.itemName}">${b.itemName}</div>
-                                    <div class="flex justify-between items-end mt-2 pt-2 border-t border-slate-100/50">
-                                        <div class="text-xs text-slate-500 flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>${b.timeStart} - ${b.timeFinish}</div>
-                                        <div class="text-xs font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">${b.qty.toLocaleString()} KG</div>
-                                    </div>
-                                </div>`;
+                        htmlOut += `<div class="p-3 rounded-lg shadow-sm mb-3 border-l-4 ${b.statusColor} relative group">
+                                        <div class="flex justify-between items-start mb-1.5">
+                                            <div class="font-semibold text-slate-800 text-sm truncate pr-2" title="${b.title}">${b.title}</div>
+                                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${b.statusBg}">${b.statusText}</span>
+                                        </div>
+                                        <div class="text-xs text-slate-600 font-medium mb-1 line-clamp-2">${b.itemName}</div>
+                                        <div class="flex justify-between items-end mt-2 pt-2 border-t border-slate-100/50">
+                                            <div class="text-xs text-slate-500">${b.timeStart} - ${b.timeFinish}</div>
+                                            <div class="text-xs font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">${b.qty.toLocaleString()} KG</div>
+                                        </div>
+                                    </div>`;
                     });
                     htmlOut += `</div></div>`;
                 });
@@ -757,487 +462,341 @@
             container.innerHTML = htmlOut;
         }
 
+        // ========================================================
+        // ระบบ Slicer
+        // ========================================================
+        let filterInstances = {};
+        function initFilters() {
+            ['filterYear', 'filterMonth', 'filterDay', 'filterLine', 'filterMac', 'filterClass', 'filterGroup'].forEach(id => {
+                filterInstances[id] = new Choices(document.getElementById(id), { removeItemButton: true, searchPlaceholderValue: 'ค้นหา...', itemSelectText: '', placeholder: true, placeholderValue: 'ทั้งหมด' });
+                document.getElementById(id).addEventListener('change', updateDashboard);
+            });
+            document.getElementById('filterItem').addEventListener('keyup', updateDashboard);
+        }
+
+        function populateDropdowns(data) {
+            const years = new Set(), months = new Set(), days = new Set(), lines = new Set(), macs = new Set(), classes = new Set(), groups = new Set();
+            data.forEach(row => {
+                const { y, m, d } = extractDateParts(getColValue(row, 'PRODUCTION_DATE'));
+                if (y) years.add(y); if (m) months.add(m); if (d) days.add(d);
+                const macVal = getColValue(row, 'MAC'); if (macVal) { macs.add(String(macVal).trim()); lines.add(getLineFromMac(macVal)); }
+                if (getColValue(row, 'CLASS')) classes.add(String(getColValue(row, 'CLASS')).trim());
+                if (getColValue(row, 'PRODUCT_GROUP')) groups.add(String(getColValue(row, 'PRODUCT_GROUP')).trim());
+            });
+
+            const fill = (id, set, map=null) => {
+                const ins = filterInstances[id]; if (!ins) return;
+                const cur = ins.getValue(true) || []; ins.clearStore();
+                let choices = [];
+                Array.from(set).sort().forEach(v => choices.push({ value: v, label: map ? `${v} - ${map[v]}` : v, selected: cur.includes(v) }));
+                choices.push({ value: 'empty', label: 'ค่าว่าง', selected: cur.includes('empty') });
+                ins.setChoices(choices, 'value', 'label', true);
+            };
+            const mNames = {'01':'ม.ค.', '02':'ก.พ.', '03':'มี.ค.', '04':'เม.ย.', '05':'พ.ค.', '06':'มิ.ย.', '07':'ก.ค.', '08':'ส.ค.', '09':'ก.ย.', '10':'ต.ค.', '11':'พ.ย.', '12':'ธ.ค.'};
+            fill('filterYear', years); fill('filterMonth', months, mNames); fill('filterDay', days); fill('filterLine', lines); fill('filterMac', macs); fill('filterClass', classes); fill('filterGroup', groups);
+        }
+
+        // ========================================================
+        // 🚀 ฟังก์ชันหลัก: อัปเดตกระดานและคำนวณ Capacity ขั้นเทพ
+        // ========================================================
         function updateDashboard() {
-            const fYearArr = filterInstances['filterYear'] ? (filterInstances['filterYear'].getValue(true) || []) : [];
-            const fMonthArr = filterInstances['filterMonth'] ? (filterInstances['filterMonth'].getValue(true) || []) : [];
-            const fDayArr = filterInstances['filterDay'] ? (filterInstances['filterDay'].getValue(true) || []) : [];
-            const fLineArr = filterInstances['filterLine'] ? (filterInstances['filterLine'].getValue(true) || []) : [];
-            const fMacArr = filterInstances['filterMac'] ? (filterInstances['filterMac'].getValue(true) || []) : [];
-            const fClassArr = filterInstances['filterClass'] ? (filterInstances['filterClass'].getValue(true) || []) : [];
-            const fGroupArr = filterInstances['filterGroup'] ? (filterInstances['filterGroup'].getValue(true) || []) : [];
+            const fYear = filterInstances['filterYear']?.getValue(true) || [];
+            const fMonth = filterInstances['filterMonth']?.getValue(true) || [];
+            const fLine = filterInstances['filterLine']?.getValue(true) || [];
+            const fMac = filterInstances['filterMac']?.getValue(true) || [];
             const fItem = document.getElementById('filterItem').value.trim().toLowerCase();
 
+            // 1. กรองข้อมูลตาม Slicer
             const filteredData = rawData.filter(row => {
-                let match = true;
-                const dateVal = getColValue(row, 'PRODUCTION_DATE') != null ? getColValue(row, 'PRODUCTION_DATE') : '';
-                const macVal = getColValue(row, 'MAC') != null ? String(getColValue(row, 'MAC')).trim() : '';
-                const lineVal = getLineFromMac(macVal); 
-                const classVal = getColValue(row, 'CLASS') != null ? String(getColValue(row, 'CLASS')).trim() : '';
-                const rawItemCode = getColValue(row, 'ITEM CODE') || getColValue(row, 'ITEM_CODE');
-                const itemVal = rawItemCode != null ? String(rawItemCode) : '';
-                const groupVal = getColValue(row, 'PRODUCT_GROUP') != null ? String(getColValue(row, 'PRODUCT_GROUP')).trim() : '';
-
-                const { y: rowYear, m: rowMonth, d: rowDay } = extractDateParts(dateVal);
-                const checkMatch = (arr, val) => { if (arr.length === 0) return true; if (arr.includes('empty') && val === '') return true; if (arr.includes(val)) return true; return false; };
-
-                if (!checkMatch(fYearArr, rowYear)) match = false;
-                if (!checkMatch(fMonthArr, rowMonth)) match = false;
-                if (!checkMatch(fDayArr, rowDay)) match = false;
-                if (!checkMatch(fLineArr, lineVal)) match = false; 
-                if (!checkMatch(fMacArr, macVal)) match = false;
-                if (!checkMatch(fClassArr, classVal)) match = false;
-                if (!checkMatch(fGroupArr, groupVal)) match = false;
-                if (fItem !== '' && !itemVal.toLowerCase().includes(fItem)) match = false;
-
-                return match;
+                const { y, m } = extractDateParts(getColValue(row, 'PRODUCTION_DATE'));
+                const mac = String(getColValue(row, 'MAC') || '').trim();
+                const line = getLineFromMac(mac);
+                const item = String(getColValue(row, 'ITEM CODE') || getColValue(row, 'ITEM_CODE') || '').toLowerCase();
+                
+                if (fYear.length && !fYear.includes(y)) return false;
+                if (fMonth.length && !fMonth.includes(m)) return false;
+                if (fLine.length && !fLine.includes(line)) return false;
+                if (fMac.length && !fMac.includes(mac)) return false;
+                if (fItem && !item.includes(fItem)) return false;
+                return true;
             });
 
+            // 2. 💡 ลอจิกใหม่: หาว่า "เครื่องจักรไหน เปิดทำงานวันที่เท่าไหร่บ้าง" (ป้องกัน Cap บวม)
             let minDateStr = "9999-99-99", maxDateStr = "0000-00-00";
             const activeMacs = new Set();
+            const macActiveDays = {}; // เก็บสถานะการเปิดเครื่องรายวัน { 'PM1': Set('2026-06-01', ...) }
 
             filteredData.forEach(row => {
-                const dateVal = getColValue(row, 'PRODUCTION_DATE') || '';
-                const macVal = getColValue(row, 'MAC');
-                const { y, m, d } = extractDateParts(dateVal);
-                if (y && m && d) {
-                    const dateStr = `${y}-${m}-${d}`;
-                    if (dateStr < minDateStr) minDateStr = dateStr;
-                    if (dateStr > maxDateStr) maxDateStr = dateStr;
+                const { y, m, d } = extractDateParts(getColValue(row, 'PRODUCTION_DATE'));
+                const macVal = String(getColValue(row, 'MAC') || '').trim();
+                if (y && m && d && macVal) {
+                    const dStr = `${y}-${m}-${d}`;
+                    if (dStr < minDateStr) minDateStr = dStr; if (dStr > maxDateStr) maxDateStr = dStr;
+                    activeMacs.add(macVal);
+                    if (!macActiveDays[macVal]) macActiveDays[macVal] = new Set();
+                    macActiveDays[macVal].add(dStr);
                 }
-                if (macVal && String(macVal).trim() !== '') activeMacs.add(String(macVal).trim());
             });
             
-            const dateInputEl = document.getElementById('dailyPlanDate');
-            if (!dateInputEl.value && maxDateStr !== "0000-00-00") dateInputEl.value = maxDateStr;
-            updateDailyPlanBoard();
+            if (rawData.length > 0 && !document.getElementById('dailyPlanDate').value && maxDateStr !== "0000-00-00") {
+                document.getElementById('dailyPlanDate').value = maxDateStr;
+            }
+            if(rawData.length > 0) updateDailyPlanBoard();
 
-            let orderTrendMode = 'monthly';
-            let maxYearStr = maxDateStr !== "0000-00-00" ? maxDateStr.substring(0,4) : new Date().getFullYear().toString();
-            
+            // 3. คำนวณวันทำงานจริง และ OT โดยเช็คจากสถานะการเปิดเครื่อง
+            let totalWorkingDays = 0, totalOTMinutes = 0;
             const macAvailableMinsDict = {};
-            let totalWorkingDays = 0, totalAvailableMins = 0;
-            activeMacs.forEach(mac => macAvailableMinsDict[mac] = 0);
+            const lineDict = {};      // Actual QTY
+            const lineCapDict = {};   // Capacity
+            const lineDaysDict = {};  // Unique Working Days
+            const lineOTDict = {};    // OT Minutes
+            const macTotalTimeDict = {}; // 💡 เพิ่มตัวแปรนี้กลับมาเพื่อเก็บเวลาทำงานของเครื่องจักร
 
             if (minDateStr !== "9999-99-99" && maxDateStr !== "0000-00-00") {
-                const minD = new Date(minDateStr);
-                const maxD = new Date(maxDateStr);
-                const diffDays = (maxD - minD) / (1000 * 60 * 60 * 24);
-                if (diffDays <= 31) orderTrendMode = 'daily';
-                else if (diffDays > 365) orderTrendMode = 'ytd';
-
                 let currentD = new Date(minDateStr);
+                const maxD = new Date(maxDateStr);
+                
                 while (currentD <= maxD) {
-                    const y = currentD.getFullYear();
-                    const m = String(currentD.getMonth() + 1).padStart(2, '0');
-                    const d = String(currentD.getDate()).padStart(2, '0');
+                    const y = currentD.getFullYear(), m = String(currentD.getMonth() + 1).padStart(2, '0'), d = String(currentD.getDate()).padStart(2, '0');
                     const dateStr = `${y}-${m}-${d}`;
-                    const dayOfWeek = currentD.getDay(); 
-
-                    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                    const isWeekend = (currentD.getDay() === 0 || currentD.getDay() === 6);
                     let baseMins = isWeekend ? 0 : 480;
-                    let isGlobalHoliday = false;
-
-                    if (calendarMap[dateStr]) {
-                        calendarMap[dateStr].forEach(event => { if (event.type === 'HOLIDAY' && event.macs.includes('ALL')) isGlobalHoliday = true; });
-                    }
+                    let isGlobalHoliday = calendarMap[dateStr]?.some(e => e.type === 'HOLIDAY' && e.macs.includes('ALL')) || false;
 
                     let dayHasWork = false;
+
                     activeMacs.forEach(mac => {
-                        let dailyMins = isGlobalHoliday ? 0 : baseMins;
-                        if (calendarMap[dateStr]) {
-                            calendarMap[dateStr].forEach(event => {
-                                if (event.macs.includes('ALL') || event.macs.includes(mac)) {
-                                    if (event.type === 'HOLIDAY') dailyMins = 0; 
-                                    else if (event.type === 'OT') dailyMins += event.min; 
-                                }
-                            });
+                        // 💡 เช็คว่าเครื่องจักรนี้ "เปิดผลิต" ในวันนี้หรือไม่
+                        if (macActiveDays[mac] && macActiveDays[mac].has(dateStr)) {
+                            let dailyMins = isGlobalHoliday ? 0 : baseMins;
+                            let dailyOT = 0;
+                            
+                            if (calendarMap[dateStr]) {
+                                calendarMap[dateStr].forEach(event => {
+                                    if (event.macs.includes('ALL') || event.macs.includes(mac)) {
+                                        if (event.type === 'HOLIDAY') dailyMins = 0;
+                                        else if (event.type === 'OT') { dailyMins += event.min; dailyOT += event.min; }
+                                    }
+                                });
+                            }
+                            
+                            macAvailableMinsDict[mac] = (macAvailableMinsDict[mac] || 0) + dailyMins;
+                            if (dailyMins > 0) dayHasWork = true;
+                            
+                            // นำ Capacity ไปรวมยอดที่ Line
+                            const lineVal = getLineFromMac(mac);
+                            if (!lineCapDict[lineVal]) { lineCapDict[lineVal] = 0; lineDaysDict[lineVal] = new Set(); lineOTDict[lineVal] = 0; lineDict[lineVal] = 0; }
+                            
+                            const macDailyCap = MAC_CAPACITY[mac] || 0;
+                            lineCapDict[lineVal] += (macDailyCap / 480) * dailyMins;
+                            if (dailyMins > 0) lineDaysDict[lineVal].add(dateStr);
+                            lineOTDict[lineVal] += dailyOT;
+                            totalOTMinutes += dailyOT;
                         }
-                        macAvailableMinsDict[mac] = (macAvailableMinsDict[mac] || 0) + dailyMins;
-                        if (dailyMins > 0) dayHasWork = true;
                     });
                     if (dayHasWork) totalWorkingDays++;
                     currentD.setDate(currentD.getDate() + 1);
                 }
-                
-                Object.values(macAvailableMinsDict).forEach(mins => { totalAvailableMins += mins; });
             }
-            
-            document.getElementById('orderTrendModeLabel').innerText = orderTrendMode === 'daily' ? 'รายวัน (Daily)' : (orderTrendMode === 'ytd' ? 'รายปี & เดือน (YTD)' : 'รายเดือน (Monthly)');
 
-            let totalQty = 0, completedCount = 0, abortCount = 0, reservedCount = 0;
-            let totalTime = 0, issueCount = 0, batchesWithTimeCount = 0;
-            const macDict = {}, macDaysDict = {}, macTotalTimeDict = {}, groupDict = {}, trendDict = {};
-            const statusGroups = {}, mediaDict = {}, macBatchData = {}, batchCapTrendDict = {}, orderTrendDict = {}; 
-            const activeLinesForOrder = new Set(), lineThroughputData = {}, lineYieldData = {};
+            // 4. สรุปผลยอดผลิต (Actual) และ KPI อื่นๆ
+            let totalQty = 0, completedCount = 0, abortCount = 0, reservedCount = 0, issueCount = 0, totalTime = 0, batchesWithTime = 0;
+            const lineThroughputData = {}, lineYieldData = {};
 
             filteredData.forEach(row => {
-                const dateVal = getColValue(row, 'PRODUCTION_DATE') || '';
-                const { y: rowYear, m: rowMonth, d: rowDay } = extractDateParts(dateVal);
-                const normalizedDate = (rowYear && rowMonth && rowDay) ? `${rowYear}-${rowMonth}-${rowDay}` : null;
-
-                let rawQty = getColValue(row, 'PRODUCTION_QTY') ?? 0;
-                if (typeof rawQty === 'string') rawQty = rawQty.replace(/,/g, '').trim();
-                const qty = Number(rawQty) || 0;
-                totalQty += qty;
-
-                const macVal = getColValue(row, 'MAC');
-                // 💡 นำ Title/ชื่อเรื่อง มาแสดงในตารางปัญหาและตาราง Status
-                const batchNoTitle = getColValue(row, 'Title') || getColValue(row, 'ชื่อเรื่อง') || getColValue(row, 'Batch No') || getColValue(row, 'ORDER_NO') || '-';
-                
-                let rawQtyOrder = getColValue(row, 'QTY_ORDER') || getColValue(row, 'QTY ORDER') || getColValue(row, 'ORDER_QTY');
-                let qtyOrder = Number(String(rawQtyOrder || 0).replace(/,/g, '').trim());
+                const qty = Number(String(getColValue(row, 'PRODUCTION_QTY')).replace(/,/g, '')) || 0;
+                const macVal = String(getColValue(row, 'MAC') || '').trim();
                 const lineVal = getLineFromMac(macVal);
+                
+                totalQty += qty;
+                if (lineVal && lineDict[lineVal] !== undefined) lineDict[lineVal] += qty;
+                else if (lineVal) lineDict[lineVal] = qty;
 
-                if (normalizedDate && (qtyOrder / 1000) > 0) {
-                    let bucketKey = normalizedDate; 
-                    let displayLabel = `${rowDay}/${rowMonth}/${rowYear}`;
-                    if (orderTrendMode === 'monthly') { bucketKey = `${rowYear}-${rowMonth}`; displayLabel = `${rowMonth}/${rowYear}`; } 
-                    else if (orderTrendMode === 'ytd') {
-                        if (rowYear < maxYearStr) { bucketKey = rowYear; displayLabel = `ปี ${rowYear}`; } 
-                        else {
-                            let bkYr = rowYear; if (!orderTrendDict[bkYr]) orderTrendDict[bkYr] = { label: `ปี ${rowYear} (รวม)`, lines: {} }; orderTrendDict[bkYr].lines[lineVal] = (orderTrendDict[bkYr].lines[lineVal] || 0) + (qtyOrder / 1000);
-                            bucketKey = `${rowYear}-${rowMonth}`; displayLabel = `${rowMonth}/${rowYear}`;
-                        }
-                    }
-                    if (!orderTrendDict[bucketKey]) orderTrendDict[bucketKey] = { label: displayLabel, lines: {} };
-                    orderTrendDict[bucketKey].lines[lineVal] = (orderTrendDict[bucketKey].lines[lineVal] || 0) + (qtyOrder / 1000);
-                    activeLinesForOrder.add(lineVal);
-                }
-
-                if (macVal && batchNoTitle !== '-') {
-                    const macKey = String(macVal).trim();
-                    if (!macBatchData[macKey]) macBatchData[macKey] = { uniqueBatches: new Set(), totalQtyOrder: 0 };
-                    if (!macBatchData[macKey].uniqueBatches.has(batchNoTitle)) {
-                        macBatchData[macKey].uniqueBatches.add(batchNoTitle);
-                        macBatchData[macKey].totalQtyOrder += qtyOrder;
-                    }
-                    if (normalizedDate) {
-                        activeMacs.add(macKey);
-                        if (!batchCapTrendDict[normalizedDate]) batchCapTrendDict[normalizedDate] = {};
-                        if (!batchCapTrendDict[normalizedDate][macKey]) batchCapTrendDict[normalizedDate][macKey] = { uniqueBatches: new Set(), totalQtyOrder: 0 };
-                        if (!batchCapTrendDict[normalizedDate][macKey].uniqueBatches.has(batchNoTitle)) {
-                            batchCapTrendDict[normalizedDate][macKey].uniqueBatches.add(batchNoTitle);
-                            batchCapTrendDict[normalizedDate][macKey].totalQtyOrder += qtyOrder;
-                        }
-                    }
+                let rawTime = getColValue(row, 'USAGE_TIME'); let time = Number(String(rawTime).replace(/,/g, '')) || 0;
+                if (time > 0) { totalTime += time; batchesWithTime++; }
+                if (lineVal && time > 0) {
+                    if (!lineThroughputData[lineVal]) lineThroughputData[lineVal] = { totalQty:0, totalTime:0 };
+                    lineThroughputData[lineVal].totalQty += qty; lineThroughputData[lineVal].totalTime += time;
                 }
                 
-                let rawTime = getColValue(row, 'USAGE_TIME');
-                let time = 0, hasValidTime = false;
-                if (rawTime !== undefined && rawTime !== null && String(rawTime).trim() !== '') {
-                    let pt = Number(String(rawTime).replace(/,/g, '').trim());
-                    if (!isNaN(pt) && pt > 0) { time = pt; hasValidTime = true; }
+                // 💡 สะสมเวลาทำงานจริงของเครื่องจักรแต่ละเครื่อง
+                if (macVal && time > 0) {
+                    macTotalTimeDict[macVal] = (macTotalTimeDict[macVal] || 0) + time;
                 }
 
-                if (lineVal) {
-                    if (hasValidTime) {
-                        if (!lineThroughputData[lineVal]) lineThroughputData[lineVal] = { totalQty: 0, totalTime: 0 };
-                        lineThroughputData[lineVal].totalQty += qty; lineThroughputData[lineVal].totalTime += time;
-                    }
-                    if (qtyOrder > 0) {
-                        if (!lineYieldData[lineVal]) lineYieldData[lineVal] = { totalProd: 0, totalOrder: 0 };
-                        lineYieldData[lineVal].totalProd += qty; lineYieldData[lineVal].totalOrder += qtyOrder;
-                    }
+                let qtyOrder = Number(String(getColValue(row, 'QTY_ORDER') || getColValue(row, 'QTY ORDER') || 0).replace(/,/g, '')) || 0;
+                if (lineVal && qtyOrder > 0) {
+                    if (!lineYieldData[lineVal]) lineYieldData[lineVal] = { totalProd:0, totalOrder:0 };
+                    lineYieldData[lineVal].totalProd += qty; lineYieldData[lineVal].totalOrder += qtyOrder;
                 }
 
-                if (normalizedDate) trendDict[normalizedDate] = (trendDict[normalizedDate] || 0) + qty;
-                
-                const statusVal = getColValue(row, 'PLAN_STATUS') || '';
-                const rowStatus = String(statusVal).toLowerCase();
-                const isCompleted = rowStatus.includes('complete') || rowStatus.includes('7');
+                // 💡 คืนชีพตัวนับสถานะเพื่อนำไปแสดงกราฟโดนัท
+                const st = String(getColValue(row, 'PLAN_STATUS') || '').toLowerCase();
+                if (st.includes('complete') || st.includes('7')) completedCount++;
+                else if (st.includes('abort') || st.includes('issue')) abortCount++;
+                else reservedCount++;
 
-                if (isCompleted) completedCount++; else if (rowStatus.includes('abort')) abortCount++; else reservedCount++;
-                if (hasValidTime) { totalTime += time; batchesWithTimeCount++; }
                 if (String(getColValue(row, 'PRODUCTION_REMARK') || '').trim() !== '') issueCount++;
-
-                if (macVal) {
-                    const macKey = String(macVal).trim();
-                    macDict[macKey] = (macDict[macKey] || 0) + qty;
-                    if (hasValidTime) macTotalTimeDict[macKey] = (macTotalTimeDict[macKey] || 0) + time;
-                    if (!macDaysDict[macKey]) macDaysDict[macKey] = new Set();
-                    if (normalizedDate) macDaysDict[macKey].add(normalizedDate);
-                }
-                
-                const groupVal = getColValue(row, 'PRODUCT_GROUP');
-                if (groupVal) { const gKey = String(groupVal).trim(); groupDict[gKey] = (groupDict[gKey] || 0) + 1; }
-
-                let mName = getColValue(row, 'WASHING_MEDIA');
-                let mQty = Number(String(getColValue(row, 'QTY (KG)_MEDIA') || getColValue(row, 'QTY_KG_MEDIA') || getColValue(row, 'QTY(KG)_MEDIA') || 0).replace(/,/g, '').trim()) || 0;
-                if (mName && String(mName).trim() !== '') { const mk = String(mName).trim(); mediaDict[mk] = (mediaDict[mk] || 0) + mQty; }
-
-                const planStatus = getColValue(row, 'PLAN_STATUS') || 'ไม่ระบุสถานะ';
-                if (!statusGroups[planStatus]) statusGroups[planStatus] = [];
-                
-                // 💡 นำ Title/ชื่อเรื่อง มาแสดงที่ตาราง
-                statusGroups[planStatus].push({
-                    orderNo: batchNoTitle,
-                    itemCode: getColValue(row, 'ITEM CODE') || getColValue(row, 'ITEM_CODE') || '-',
-                    itemName: getColValue(row, 'ITEM_NAME') || '-',
-                    timeStart: formatExcelDateTime(getColValue(row, 'PROD_TIME_START')),
-                    timeFinish: formatExcelDateTime(getColValue(row, 'PROD_TIME_FINISH')),
-                    usageTime: time
-                });
             });
 
-            const completionRate = filteredData.length > 0 ? ((completedCount / filteredData.length) * 100).toFixed(1) : 0;
-            const avgTime = batchesWithTimeCount > 0 ? Math.round(totalTime / batchesWithTimeCount) : 0;
+            // 5. อัปเดตการ์ดข้อมูล (รวมถึง 2 การ์ดใหม่: วันทำงาน & OT)
+            document.getElementById('kpiTotal').innerHTML = `${totalQty.toLocaleString()} <span class="text-sm font-normal text-slate-400">KG</span>`;
+            document.getElementById('kpiRate').innerHTML = `${filteredData.length ? ((completedCount / filteredData.length)*100).toFixed(1) : 0}%`;
+            document.getElementById('kpiWorkDays').innerHTML = `${totalWorkingDays} <span class="text-sm font-normal text-slate-400">วัน</span>`;
+            document.getElementById('kpiOT').innerHTML = `${(totalOTMinutes / 60).toFixed(1)} <span class="text-sm font-normal text-slate-400">ชม.</span>`;
+            document.getElementById('kpiTime').innerHTML = `${batchesWithTime ? Math.round(totalTime / batchesWithTime) : 0} <span class="text-sm font-normal text-slate-400">นาที</span>`;
+            document.getElementById('kpiIssues').innerHTML = `${issueCount} <span class="text-sm font-normal text-slate-400">ครั้ง</span>`;
 
-            document.getElementById('kpiTotal').innerHTML = `${totalQty.toLocaleString()} <span class="text-base font-normal text-slate-400">KG</span>`;
-            document.getElementById('kpiRate').innerHTML = `${completionRate}<span class="text-2xl">%</span>`;
-            document.getElementById('kpiTime').innerHTML = `${avgTime} <span class="text-base font-normal text-slate-400">นาที</span>`;
-            document.getElementById('kpiIssues').innerHTML = `${issueCount} <span class="text-base font-normal text-slate-400">ครั้ง</span>`;
+            // 6. 💡 อัปเดตกราฟ Machine Chart (เปลี่ยนเป็นระดับ Line)
+            if (machineChartInstance) {
+                const sortedLines = Object.keys(lineDict).sort((a,b) => lineDict[b] - lineDict[a]).slice(0, 7);
+                machineChartInstance.data.labels = sortedLines;
+                machineChartInstance.data.datasets[0].data = sortedLines.map(line => lineDict[line] || 0); 
+                machineChartInstance.data.datasets[1].data = sortedLines.map(line => lineCapDict[line] || 0);    
+                
+                // ฝากค่าไว้ที่ Window เพื่อให้ Tooltip ดึงไปโชว์
+                window.currentLineDays = lineDaysDict;
+                window.currentLineOT = lineOTDict;
 
-            // Update Utilization
-            const macUtilContainer = document.getElementById('macUtilizationContainer');
-            const factoryTimeLabel = document.getElementById('factoryTimeLabel');
-            if (activeMacs.size > 0) {
-                factoryTimeLabel.innerText = `อ้างอิงเวลาทำงานจริง: ${totalWorkingDays} วัน (${Math.round(totalAvailableMins/60).toLocaleString()} ชม.)`;
-                factoryTimeLabel.className = "text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-700";
-            } else {
-                factoryTimeLabel.innerText = `ไม่พบวันทำงานในช่วงที่เลือก`;
-                factoryTimeLabel.className = "text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-500";
+                machineChartInstance.update();
             }
 
-            if (rawData.length === 0) macUtilContainer.innerHTML = `<div class="col-span-full text-center text-slate-500 py-6 font-medium">ยังไม่มีข้อมูล 📊</div>`;
-            else if (Object.keys(macTotalTimeDict).length === 0) macUtilContainer.innerHTML = `<div class="col-span-full text-center text-slate-500 py-6">ไม่พบข้อมูลเวลาการทำงานในช่วงที่เลือก</div>`;
+            // 7. อัปเดตกราฟอื่นๆ (Throughput & Yield เปลี่ยนเป็นระดับ Line ตามกันไป)
+            if (throughputChartInstance) {
+                const sortedLinesTP = Object.keys(lineThroughputData).sort((a,b) => (lineThroughputData[b].totalQty / lineThroughputData[b].totalTime) - (lineThroughputData[a].totalQty / lineThroughputData[a].totalTime));
+                throughputChartInstance.data.labels = sortedLinesTP;
+                throughputChartInstance.data.datasets = [{ label: 'KG/Hr', data: sortedLinesTP.map(l => { const hrs = lineThroughputData[l].totalTime / 60; return hrs > 0 ? Math.round(lineThroughputData[l].totalQty / hrs) : 0; }), backgroundColor: 'rgba(16, 185, 129, 0.8)', borderRadius: 4 }];
+                throughputChartInstance.update();
+            }
+            if (yieldChartInstance) {
+                const sortedLinesY = Object.keys(lineYieldData).sort((a,b) => (lineYieldData[b].totalProd / lineYieldData[b].totalOrder) - (lineYieldData[a].totalProd / lineYieldData[a].totalOrder));
+                yieldChartInstance.data.labels = sortedLinesY;
+                yieldChartInstance.data.datasets = [{ label: 'Yield %', data: sortedLinesY.map(l => Number(((lineYieldData[l].totalProd / lineYieldData[l].totalOrder) * 100).toFixed(1))), backgroundColor: 'rgba(59, 130, 246, 0.8)', borderRadius: 4 }];
+                yieldChartInstance.update();
+            }
+
+            // 8. อัปเดตตารางปัญหา (ใช้หัวตารางเป็น Title เหมือน Kanban)
+            const tbody = document.getElementById('problemTableBody'); tbody.innerHTML = ''; 
+            const issueRows = filteredData.filter(row => String(getColValue(row, 'PRODUCTION_REMARK') || '').trim() !== '').slice(0, 10);
+            if (issueRows.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-500">ไม่มีข้อมูลบันทึกปัญหาในช่วงเวลานี้</td></tr>`; } 
             else {
+                issueRows.forEach(row => {
+                    const st = String(getColValue(row, 'PLAN_STATUS') || '').toLowerCase();
+                    let badge = `<span class="bg-amber-100 text-amber-700 px-2 py-1 rounded-full text-xs">Reserved</span>`;
+                    if (st.includes('complete') || st.includes('7')) badge = `<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full text-xs">Completed</span>`;
+                    else if (st.includes('abort')) badge = `<span class="bg-rose-100 text-rose-700 px-2 py-1 rounded-full text-xs">Abort</span>`;
+
+                    // 💡 ใช้คอลัมน์ชื่อเรื่องเหมือนกับ Kanban
+                    const titleVal = getColValue(row, 'ชื่อเรื่อง') || getColValue(row, 'Title') || getColValue(row, 'Batch No') || getColValue(row, 'ORDER_NO') || '-';
+
+                    tbody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-slate-50 border-b border-slate-100">
+                        <td class="py-3 px-6 font-medium text-blue-600">${titleVal}</td>
+                        <td class="py-3 px-6"><span class="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs font-semibold">${getColValue(row, 'MAC') || '-'}</span></td>
+                        <td class="py-3 px-6 text-xs text-slate-600 truncate max-w-xs" title="${getColValue(row, 'ITEM_NAME')}">${getColValue(row, 'ITEM_NAME') || '-'}</td>
+                        <td class="py-3 px-6 text-slate-600 text-xs">${getColValue(row, 'PRODUCTION_REMARK') || ''}</td>
+                        <td class="py-3 px-6 text-center">${badge}</td></tr>`);
+                });
+            }
+            
+            // 💡 9. อัปเดตการใช้ประโยชน์เครื่องจักร (Machine Utilization) ที่หายไป
+            const macUtilContainer = document.getElementById('macUtilizationContainer');
+            const factoryTimeLabel = document.getElementById('factoryTimeLabel');
+            
+            if (activeMacs.size > 0) {
+                factoryTimeLabel.innerText = `ประมวลผลวันทำงานจริง ${totalWorkingDays} วัน และ OT แยกตามเครื่องจักร`;
+                factoryTimeLabel.classList.remove('bg-slate-100', 'text-slate-500');
+                factoryTimeLabel.classList.add('bg-blue-100', 'text-blue-700');
+            } else {
+                factoryTimeLabel.innerText = `ไม่พบข้อมูลเครื่องจักร`;
+                factoryTimeLabel.classList.add('bg-slate-100', 'text-slate-500');
+            }
+
+            if (rawData.length === 0) {
+                macUtilContainer.innerHTML = `<div class="col-span-full text-center text-slate-500 py-6 font-medium">ยังไม่มีข้อมูล 📊</div>`;
+                macUtilContainer.className = "block";
+            } else if (Object.keys(macTotalTimeDict).length === 0) {
+                macUtilContainer.innerHTML = `<div class="col-span-full text-center text-slate-500 py-6">ไม่พบข้อมูลเวลาการทำงานในช่วงที่เลือก</div>`;
+                macUtilContainer.className = "block";
+            } else {
+                macUtilContainer.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4";
                 let utilHtml = '';
-                Object.entries(macTotalTimeDict).sort((a, b) => b[1] - a[1]).forEach(([mName, totalMTime]) => {
+                const sortedMacsUtil = Object.entries(macTotalTimeDict).sort((a, b) => b[1] - a[1]);
+                
+                for (const [mName, totalMTime] of sortedMacsUtil) {
                     const availMins = macAvailableMinsDict[mName] || 0;
                     const percentUtil = availMins > 0 ? ((totalMTime / availMins) * 100).toFixed(1) : 0;
-                    let bgBadge = 'bg-blue-100 text-blue-700', bgBar = 'bg-blue-500';
+                    
+                    let bgBadge = 'bg-blue-100 text-blue-700';
+                    let bgBar = 'bg-blue-500';
+                    
                     if (percentUtil > 100) { bgBadge = 'bg-rose-100 text-rose-700'; bgBar = 'bg-rose-500'; } 
                     else if (percentUtil >= 80) { bgBadge = 'bg-emerald-100 text-emerald-700'; bgBar = 'bg-emerald-500'; } 
                     else if (percentUtil < 50) { bgBadge = 'bg-amber-100 text-amber-700'; bgBar = 'bg-amber-500'; }
 
-                    utilHtml += `<div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col justify-center transition-transform hover:scale-105"><div class="flex justify-between items-center mb-3"><h4 class="font-bold text-slate-700">${mName}</h4><span class="text-xs font-bold px-2 py-1 rounded ${bgBadge}">${percentUtil}%</span></div><div class="w-full bg-slate-100 rounded-full h-2 mb-2"><div class="${bgBar} h-2 rounded-full" style="width: ${Math.min(percentUtil, 100)}%"></div></div><p class="text-xs text-slate-500 text-right font-medium" title="รันงานจริง / เวลาเปิดเครื่อง"><span class="text-slate-700">${Math.round(totalMTime/60).toLocaleString()}</span> / ${Math.round(availMins/60).toLocaleString()} ชม.</p></div>`;
-                });
+                    utilHtml += `
+                        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col justify-center transition-transform hover:scale-105">
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="font-bold text-slate-700">${mName}</h4>
+                                <span class="text-xs font-bold px-2 py-1 rounded ${bgBadge}">${percentUtil}%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2 mb-2">
+                                <div class="${bgBar} h-2 rounded-full" style="width: ${Math.min(percentUtil, 100)}%"></div>
+                            </div>
+                            <p class="text-xs text-slate-500 text-right font-medium" title="รันงานจริง / เวลาเปิดเครื่อง"><span class="text-slate-700">${Math.round(totalMTime/60).toLocaleString()}</span> / ${Math.round(availMins/60).toLocaleString()} ชม.</p>
+                        </div>
+                    `;
+                }
                 macUtilContainer.innerHTML = utilHtml;
             }
 
-            // Update Batch Cap Table
-            const batchCapContainer = document.getElementById('batchCapContainer');
-            if (rawData.length === 0) batchCapContainer.innerHTML = `<div class="col-span-full text-center text-slate-500 py-6 font-medium">ยังไม่มีข้อมูล 📊</div>`;
-            else if (Object.keys(macBatchData).length === 0) batchCapContainer.innerHTML = `<div class="col-span-full text-center text-slate-500 py-6">ไม่พบข้อมูลออเดอร์ในช่วงที่เลือก</div>`;
-            else {
-                let bCapHtml = '';
-                Object.entries(macBatchData).sort((a, b) => b[1].uniqueBatches.size - a[1].uniqueBatches.size).forEach(([mName, dataObj]) => {
-                    const batchCount = dataObj.uniqueBatches.size;
-                    const totalStdCap = batchCount * getStdBatchCap(mName);
-                    let percentBatchCap = totalStdCap > 0 ? ((dataObj.totalQtyOrder / totalStdCap) * 100).toFixed(1) : 0;
-                    let bgBadge = 'bg-purple-100 text-purple-700', bgBar = 'bg-purple-500';
-                    if (percentBatchCap > 100) { bgBadge = 'bg-rose-100 text-rose-700'; bgBar = 'bg-rose-500'; }
-                    bCapHtml += `<div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col justify-center"><div class="flex justify-between items-center mb-1"><h4 class="font-bold text-slate-700">${mName}</h4><span class="text-xs font-bold text-slate-400">${batchCount} แบทช์</span></div><div class="flex justify-between items-end mb-2"><p class="text-[10px] text-slate-400 leading-tight">Std Cap:<br>${getStdBatchCap(mName).toLocaleString()}/แบทช์</p><span class="text-sm font-bold px-2 py-0.5 rounded ${bgBadge}">${percentBatchCap}%</span></div><div class="w-full bg-slate-100 rounded-full h-1.5"><div class="${bgBar} h-1.5 rounded-full" style="width: ${Math.min(percentBatchCap, 100)}%"></div></div></div>`;
-                });
-                batchCapContainer.innerHTML = bCapHtml;
-            }
-
-            // Update Media Container
-            const mediaContainer = document.getElementById('mediaUsageContainer');
-            if (rawData.length === 0) mediaContainer.innerHTML = `<div class="col-span-full text-center text-slate-500 py-6 font-medium">ยังไม่มีข้อมูล 📊</div>`;
-            else if (Object.keys(mediaDict).length === 0) mediaContainer.innerHTML = `<div class="col-span-full text-center text-slate-500 py-6">ไม่พบการใช้ Washing Media ในช่วงเวลาที่เลือก</div>`;
-            else {
-                let mediaHtml = '';
-                Object.entries(mediaDict).sort((a, b) => b[1] - a[1]).forEach(([mName, mQty]) => {
-                    mediaHtml += `<div class="bg-blue-50 rounded-xl p-4 border border-blue-100 text-center shadow-sm flex flex-col justify-center transition-transform hover:scale-105"><p class="text-xs text-slate-500 font-medium mb-1 break-words" title="${mName}">${mName}</p><h4 class="text-xl font-bold text-blue-600 mt-auto">${mQty.toLocaleString()} <span class="text-xs text-blue-400 font-normal">KG</span></h4></div>`;
-                });
-                mediaContainer.innerHTML = mediaHtml;
-            }
-
-            // Update Status Breakdown
-            const statusContainer = document.getElementById('statusBreakdownContainer');
-            if (rawData.length === 0) statusContainer.innerHTML = `<div class="text-center text-slate-500 py-10 font-medium">ยังไม่มีข้อมูล 📊</div>`;
-            else if (Object.keys(statusGroups).length === 0) statusContainer.innerHTML = `<div class="text-center text-slate-500 py-8">ไม่พบรายการแบทช์ตามเงื่อนไขที่เลือก</div>`;
-            else {
-                let htmlContent = '';
-                for (const [statusName, items] of Object.entries(statusGroups)) {
-                    let tableRows = items.map(item => `<tr class="border-b border-slate-50 hover:bg-slate-50 transition-colors"><td class="py-2.5 px-4 text-blue-600 font-semibold">${item.orderNo}</td><td class="py-2.5 px-4 text-slate-600">${item.itemCode}</td><td class="py-2.5 px-4 text-slate-700 truncate max-w-xs" title="${item.itemName}">${item.itemName}</td><td class="py-2.5 px-4 text-slate-500">${item.timeStart}</td><td class="py-2.5 px-4 text-slate-500">${item.timeFinish}</td><td class="py-2.5 px-4 text-right text-slate-700 font-medium">${item.usageTime} <span class="text-xs text-slate-400 font-normal">นาที</span></td></tr>`).join('');
-                    htmlContent += `<div class="mb-6 last:mb-0 border border-slate-200 rounded-xl overflow-hidden shadow-sm"><div class="bg-slate-50 px-4 py-3 flex justify-between items-center border-b border-slate-200"><h4 class="font-bold text-slate-800 flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-blue-500"></span> ${statusName}</h4><span class="bg-white text-slate-600 text-xs font-bold px-2 py-1 rounded-md border border-slate-200 shadow-sm">${items.length} รายการ</span></div><div class="overflow-x-auto"><table class="w-full text-left text-sm whitespace-nowrap"><thead class="bg-white text-slate-500"><tr><th class="py-2.5 px-4 font-medium border-b border-slate-100">Batch No (ชื่อเรื่อง)</th><th class="py-2.5 px-4 font-medium border-b border-slate-100">Item Code</th><th class="py-2.5 px-4 font-medium border-b border-slate-100">Item Name</th><th class="py-2.5 px-4 font-medium border-b border-slate-100">Start Time</th><th class="py-2.5 px-4 font-medium border-b border-slate-100">Finish Time</th><th class="py-2.5 px-4 font-medium border-b border-slate-100 text-right">Usage Time</th></tr></thead><tbody class="bg-white">${tableRows}</tbody></table></div></div>`;
-                }
-                statusContainer.innerHTML = htmlContent;
-            }
-
-            if(machineChartInstance) {
-                const sortedMacs = Object.keys(macDict).sort((a,b) => macDict[b] - macDict[a]).slice(0, 7);
-                machineChartInstance.data.labels = sortedMacs;
-                machineChartInstance.data.datasets[0].data = sortedMacs.map(mac => macDict[mac]);
-                machineChartInstance.data.datasets[1].data = sortedMacs.map(mac => (MAC_CAPACITY[mac] || 0) * (macDaysDict[mac].size || 1));    
-                machineChartInstance.update();
-            }
-
-            if(typeof orderQtyChartInstance !== 'undefined' && orderQtyChartInstance) {
-                const sortedBuckets = Object.keys(orderTrendDict).sort();
-                orderQtyChartInstance.data.labels = sortedBuckets.map(k => orderTrendDict[k].label);
-                const lineColors = { 'PM1': '#3b82f6', 'PM2': '#10b981', 'PM4': '#8b5cf6', 'PM5': '#f59e0b', 'CC': '#ef4444', 'LIQUID VIT': '#06b6d4', 'DISINF': '#ec4899', 'TOLL/REPACK': '#f97316', 'REFILL': '#14b8a6', 'TABLET': '#6366f1', 'อื่นๆ (Other)': '#94a3b8' };
-                const defaultColors = ['#f43f5e', '#8b5cf6', '#d946ef', '#14b8a6', '#f59e0b', '#0ea5e9'];
-                let colorIdx = 0;
-                orderQtyChartInstance.data.datasets = Array.from(activeLinesForOrder).sort().map(line => ({
-                    label: line, data: sortedBuckets.map(b => orderTrendDict[b].lines[line] ? Number(orderTrendDict[b].lines[line].toFixed(2)) : 0), backgroundColor: lineColors[line] || defaultColors[colorIdx++ % defaultColors.length], borderWidth: 0
-                }));
-                orderQtyChartInstance.update();
-            }
-
-            if(batchCapChartInstance) {
-                const sortedDates = Object.keys(batchCapTrendDict).sort(); 
-                const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#f97316', '#14b8a6', '#6366f1', '#84cc16', '#a855f7'];
-                let colorIdx = 0;
-                const datasets = [];
-                Array.from(activeMacs).sort().forEach(mac => {
-                    const dataPoints = sortedDates.map(date => {
-                        const dayData = batchCapTrendDict[date]?.[mac];
-                        if (!dayData) return null; 
-                        const totalStdCap = dayData.uniqueBatches.size * getStdBatchCap(mac);
-                        return totalStdCap > 0 ? Number(((dayData.totalQtyOrder / totalStdCap) * 100).toFixed(1)) : null;
-                    });
-                    if (dataPoints.some(val => val !== null)) {
-                        datasets.push({ label: mac, data: dataPoints, borderColor: colors[colorIdx % colors.length], backgroundColor: colors[colorIdx % colors.length], borderWidth: 2.5, tension: 0.4, pointRadius: 3, pointHoverRadius: 6, spanGaps: true });
-                        colorIdx++;
-                    }
-                });
-                batchCapChartInstance.data.labels = sortedDates.map(d => { const parts = d.split('-'); return `${parts[2]}/${parts[1]}/${parts[0]}`; });
-                batchCapChartInstance.data.datasets = datasets;
-                batchCapChartInstance.update();
-            }
-
-            if(typeof throughputChartInstance !== 'undefined' && throughputChartInstance) {
-                const sortedLinesTP = Object.keys(lineThroughputData).sort((a,b) => (lineThroughputData[b].totalQty / (lineThroughputData[b].totalTime / 60)) - (lineThroughputData[a].totalQty / (lineThroughputData[a].totalTime / 60)));
-                throughputChartInstance.data.labels = sortedLinesTP;
-                throughputChartInstance.data.datasets = [{ label: 'KG/Hr', data: sortedLinesTP.map(line => { const hrs = lineThroughputData[line].totalTime / 60; return hrs > 0 ? Math.round(lineThroughputData[line].totalQty / hrs) : 0; }), backgroundColor: 'rgba(16, 185, 129, 0.8)', hoverBackgroundColor: 'rgba(5, 150, 105, 1)', borderRadius: 4 }];
-                throughputChartInstance.update();
-            }
-
-            if(typeof yieldChartInstance !== 'undefined' && yieldChartInstance) {
-                const sortedLinesY = Object.keys(lineYieldData).sort((a,b) => ((lineYieldData[b].totalProd / lineYieldData[b].totalOrder) * 100) - ((lineYieldData[a].totalProd / lineYieldData[a].totalOrder) * 100));
-                const yData = sortedLinesY.map(line => Number(((lineYieldData[line].totalProd / lineYieldData[line].totalOrder) * 100).toFixed(1)));
-                yieldChartInstance.data.labels = sortedLinesY;
-                yieldChartInstance.data.datasets = [{ label: 'Yield %', data: yData, backgroundColor: yData.map(val => val > 105 || val < 95 ? 'rgba(245, 158, 11, 0.8)' : 'rgba(59, 130, 246, 0.8)'), hoverBackgroundColor: yData.map(val => val > 105 || val < 95 ? 'rgba(217, 119, 6, 1)' : 'rgba(37, 99, 235, 1)'), borderRadius: 4 }];
-                yieldChartInstance.update();
-            }
-
-            if(statusChartInstance) {
+            // 💡 10. อัปเดต Doughnut Chart สถานะแผนการผลิตที่หายไป
+            if (statusChartInstance) {
                 statusChartInstance.data.datasets[0].data = [completedCount, abortCount, reservedCount];
                 statusChartInstance.update();
             }
-
-            if(groupChartInstance) {
-                const sortedGroups = Object.keys(groupDict).sort((a,b) => groupDict[b] - groupDict[a]).slice(0, 6);
-                groupChartInstance.data.labels = sortedGroups;
-                groupChartInstance.data.datasets[0].data = sortedGroups.map(grp => groupDict[grp]);
-                groupChartInstance.update();
-            }
-
-            if(trendChartInstance) {
-                const sortedDates = Object.keys(trendDict).sort(); 
-                trendChartInstance.data.labels = sortedDates.map(d => { const parts = d.split('-'); return `${parts[2]}/${parts[1]}/${parts[0]}`; });
-                trendChartInstance.data.datasets[0].data = sortedDates.map(d => trendDict[d]);
-                trendChartInstance.update();
-            }
-
-            // Update Issue Table
-            const tbody = document.getElementById('problemTableBody');
-            tbody.innerHTML = ''; 
-            const issueRows = filteredData.filter(row => String(getColValue(row, 'PRODUCTION_REMARK') || '').trim() !== '').slice(0, 10);
-            
-            if (rawData.length === 0) tbody.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-slate-500 font-medium">ยังไม่มีข้อมูล 📊</td></tr>`;
-            else if (issueRows.length === 0) tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-500">ไม่มีข้อมูลบันทึกปัญหาในช่วงเวลานี้</td></tr>`;
-            else {
-                issueRows.forEach(row => {
-                    const statusVal = getColValue(row, 'PLAN_STATUS') || '';
-                    const st = String(statusVal).toLowerCase();
-                    let statusBadge = st.includes('complete') || st.includes('7') ? `<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full text-xs font-medium">Completed</span>` : (st.includes('abort') ? `<span class="bg-rose-100 text-rose-700 px-2 py-1 rounded-full text-xs font-medium">Abort</span>` : `<span class="bg-amber-100 text-amber-700 px-2 py-1 rounded-full text-xs font-medium">Reserved</span>`);
-
-                    // 💡 นำ Title/ชื่อเรื่อง มาแสดงที่ตารางปัญหา
-                    const batchNoTitle = getColValue(row, 'Title') || getColValue(row, 'ชื่อเรื่อง') || getColValue(row, 'ORDER_NO') || '-';
-
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-slate-50 transition-colors';
-                    tr.innerHTML = `<td class="py-3 px-6 font-medium text-blue-600">${batchNoTitle}</td><td class="py-3 px-6"><span class="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs font-semibold">${getColValue(row, 'MAC') || '-'}</span></td><td class="py-3 px-6">${getColValue(row, 'ITEM CODE') || getColValue(row, 'ITEM_CODE') || '-'}</td><td class="py-3 px-6 text-slate-600">${getColValue(row, 'PRODUCTION_REMARK') || ''}</td><td class="py-3 px-6 text-center">${statusBadge}</td>`;
-                    tbody.appendChild(tr);
-                });
-            }
         }
 
-        function resetFilters() {
-            Object.values(filterInstances).forEach(instance => instance.removeActiveItems());
-            document.getElementById('filterItem').value = '';
-            updateDashboard();
-        }
-
-        function showAlert(title, message, type = 'info') {
-            const modal = document.getElementById('alertModal');
-            document.getElementById('alertTitle').innerText = title;
-            document.getElementById('alertMessage').innerText = message;
-            document.getElementById('alertIcon').innerHTML = type === 'success' ? '✅' : (type === 'error' ? '❌' : 'ℹ️');
-            modal.classList.remove('hidden');
-        }
-
+        function resetFilters() { Object.values(filterInstances).forEach(ins => ins.removeActiveItems()); document.getElementById('filterItem').value = ''; updateDashboard(); }
+        function showAlert(t, m, i) { document.getElementById('alertTitle').innerText = t; document.getElementById('alertMessage').innerText = m; document.getElementById('alertModal').classList.remove('hidden'); }
         function closeAlertModal() { document.getElementById('alertModal').classList.add('hidden'); }
 
         document.getElementById('excelUpload').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
+            const file = e.target.files[0]; if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, {type: 'array'});
-                const firstSheetName = workbook.SheetNames[0];
-                const rawJson = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheetName], {raw: true}); 
+                const workbook = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
+                rawData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {raw: true}); 
                 
-                const calSheetName = workbook.SheetNames.find(n => n.toLowerCase().includes('calendar')) || workbook.SheetNames[1];
-                if (calSheetName) {
-                    const calRawData = XLSX.utils.sheet_to_json(workbook.Sheets[calSheetName], {raw: true});
-                    calendarMap = {};
-                    calRawData.forEach(row => {
-                        const dVal = getColValue(row, 'Date') || getColValue(row, 'DATE') || getColValue(row, 'วันที่');
-                        const tVal = getColValue(row, 'Type') || getColValue(row, 'TYPE') || getColValue(row, 'ประเภท');
-                        const mVal = getColValue(row, 'Min') || getColValue(row, 'MIN') || getColValue(row, 'นาที');
-                        const macVal = getColValue(row, 'MAC') || getColValue(row, 'เครื่องจักร'); 
-                        const { y, m, d } = extractDateParts(dVal);
-                        if (y && m && d) {
-                            const dateStr = `${y}-${m}-${d}`;
-                            if (!calendarMap[dateStr]) calendarMap[dateStr] = [];
-                            calendarMap[dateStr].push({ type: String(tVal).trim().toUpperCase(), min: Number(mVal) || 0, macs: macVal ? String(macVal).split(',').map(s => s.trim()) : ['ALL'] });
+                const calSheet = workbook.SheetNames.find(n => n.toLowerCase().includes('calendar'));
+                if (calSheet) {
+                    calendarMap = {}; XLSX.utils.sheet_to_json(workbook.Sheets[calSheet], {raw: true}).forEach(row => {
+                        const { y, m, d } = extractDateParts(getColValue(row, 'Date') || getColValue(row, 'วันที่'));
+                        if (y) {
+                            const dStr = `${y}-${m}-${d}`; if (!calendarMap[dStr]) calendarMap[dStr] = [];
+                            const macs = getColValue(row, 'MAC') || getColValue(row, 'เครื่องจักร');
+                            calendarMap[dStr].push({ type: String(getColValue(row, 'Type') || getColValue(row, 'ประเภท')).trim().toUpperCase(), min: Number(getColValue(row, 'Min') || getColValue(row, 'นาที')) || 0, macs: macs ? String(macs).split(',').map(s=>s.trim()) : ['ALL'] });
                         }
                     });
                 }
 
-                const capSheetName = workbook.SheetNames.find(n => n.toLowerCase().includes('mac_cap') || n.toLowerCase().includes('mac cap'));
-                if (capSheetName) {
-                    const capRawData = XLSX.utils.sheet_to_json(workbook.Sheets[capSheetName], {raw: true});
+                const capSheet = workbook.SheetNames.find(n => n.toLowerCase().includes('mac_cap'));
+                if (capSheet) {
                     MAC_STD_BATCH_CAP = { 'default': 1000 }; MAC_CAPACITY = {}; MAC_TO_LINE = {};
-                    capRawData.forEach(row => {
-                        const macCode = getColValue(row, 'MAC_CODE') || getColValue(row, 'MAC CODE') || getColValue(row, 'MAC');
-                        if (macCode) {
-                            const mac = String(macCode).trim();
-                            const line = getColValue(row, 'PROD_LINE') || getColValue(row, 'LINE');
-                            if (line) MAC_TO_LINE[mac] = String(line).trim();
-                            const stdCap = getColValue(row, 'MAC_STD_BATCH_CAP') || getColValue(row, 'STD BATCH CAP');
-                            if (stdCap !== undefined && stdCap !== null && !isNaN(Number(stdCap))) MAC_STD_BATCH_CAP[mac] = Number(stdCap);
-                            const maxCap = getColValue(row, 'MAC_CAPACITY') || getColValue(row, 'CAPACITY');
-                            if (maxCap !== undefined && maxCap !== null && !isNaN(Number(maxCap))) MAC_CAPACITY[mac] = Number(maxCap);
+                    XLSX.utils.sheet_to_json(workbook.Sheets[capSheet], {raw: true}).forEach(row => {
+                        const mac = String(getColValue(row, 'MAC_CODE') || getColValue(row, 'MAC') || '').trim();
+                        if (mac) {
+                            MAC_TO_LINE[mac] = String(getColValue(row, 'PROD_LINE') || getColValue(row, 'LINE') || '').trim();
+                            MAC_STD_BATCH_CAP[mac] = Number(getColValue(row, 'MAC_STD_BATCH_CAP') || getColValue(row, 'STD BATCH CAP') || 1000);
+                            MAC_CAPACITY[mac] = Number(getColValue(row, 'MAC_CAPACITY') || getColValue(row, 'CAPACITY') || 0);
                         }
                     });
                 }
-                
-                if(rawJson && rawJson.length > 0) {
-                    rawData = rawJson;
-                    populateDropdowns(rawData); 
-                    showAlert('อัปโหลดสำเร็จ!', `ประมวลผลข้อมูลเรียบร้อยแล้ว\nจำนวนรายการข้อมูลทั้งหมด: ${rawData.length.toLocaleString()} รายการ`, 'success');
-                    resetFilters(); 
-                } else {
-                    showAlert('แจ้งเตือน', 'ไม่พบข้อมูลในไฟล์ Excel ที่อัปโหลด', 'info');
-                }
+                if(rawData.length > 0) { populateDropdowns(rawData); showAlert('อัปโหลดสำเร็จ!', `จำนวน: ${rawData.length.toLocaleString()} รายการ`, 'success'); resetFilters(); }
             };
-            reader.readAsArrayBuffer(file);
-            e.target.value = ''; 
+            reader.readAsArrayBuffer(file); e.target.value = ''; 
         });
 
-        // ========================================================
-        // เริ่มต้นการทำงาน (Initialization)
-        // ========================================================
         initFilters();
-        updateDashboard();
     </script>
 </body>
 </html>
