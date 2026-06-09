@@ -537,10 +537,9 @@
         }
 
         // ========================================================
-        // 💡 ระบบ Daily Plan Board (Kanban) ปรับปรุงใหม่ให้รองรับช่วงเวลา
+        // 💡 ระบบ Daily Plan Board (Kanban) ปรับปรุงให้คอลัมน์เป็นวันที่
         // ========================================================
         
-        // ฟังก์ชันคีย์ลัด เมื่อวาน/วันนี้/พรุ่งนี้
         function setKanbanQuickDate(type) {
             const targetDate = new Date();
             if (type === 'yesterday') targetDate.setDate(targetDate.getDate() - 1);
@@ -563,10 +562,9 @@
             
             if (!startDateInput && !endDateInput) { container.innerHTML = `<div class="text-center py-10 text-slate-500">กรุณาเลือกวันที่ที่ต้องการดูข้อมูล</div>`; return; }
 
-            // หากเลือกวันเดียว ให้ใช้วันนั้นเป็นทั้งจุดเริ่มต้นและสิ้นสุด
             let start = startDateInput || endDateInput;
             let end = endDateInput || startDateInput;
-            if (start > end) { let tmp = start; start = end; end = tmp; } // สลับหากเลือกวันที่กลับด้าน
+            if (start > end) { let tmp = start; start = end; end = tmp; }
 
             const dailyData = rawData.filter(row => {
                 const dateVal = getColValue(row, 'PRODUCTION_DATE') || getColValue(row, 'PROD_TIME_START');
@@ -583,8 +581,14 @@
                 let macVal = getColValue(row, 'MAC'); macVal = (macVal) ? String(macVal).trim() : 'ไม่ระบุ MAC';
                 const lineVal = getLineFromMac(macVal);
                 
+                const dateVal = getColValue(row, 'PRODUCTION_DATE') || getColValue(row, 'PROD_TIME_START');
+                const { y, m, d } = extractDateParts(dateVal);
+                const sortDate = y ? `${y}-${m}-${d}` : '9999-99-99';
+                const shortDate = y ? `${d}/${m}/${y.substring(2)}` : '-';
+                
                 if (!boardData[lineVal]) boardData[lineVal] = {};
-                if (!boardData[lineVal][macVal]) boardData[lineVal][macVal] = [];
+                if (!boardData[lineVal][sortDate]) boardData[lineVal][sortDate] = { displayDate: shortDate, macs: {} };
+                if (!boardData[lineVal][sortDate].macs[macVal]) boardData[lineVal][sortDate].macs[macVal] = [];
 
                 let qtyOrder = Number(String(getColValue(row, 'QTY_ORDER') || getColValue(row, 'QTY ORDER') || getColValue(row, 'ORDER_QTY') || 0).replace(/,/g, '')) || 0;
                 const statusVal = getColValue(row, 'PLAN_STATUS') || ''; const st = String(statusVal).toLowerCase();
@@ -594,14 +598,8 @@
 
                 const titleVal = getColValue(row, 'ชื่อเรื่อง') || getColValue(row, 'Title') || getColValue(row, 'Batch No') || getColValue(row, 'ORDER_NO') || '-';
 
-                // ดึงข้อมูลวันที่ย่อไปโชว์ในการ์ดด้วย ป้องกันการสับสนเวลาดูหลายวัน
-                const dateVal = getColValue(row, 'PRODUCTION_DATE') || getColValue(row, 'PROD_TIME_START');
-                const { y, m, d } = extractDateParts(dateVal);
-                const shortDate = y ? `${d}/${m}/${y.substring(2)}` : '-';
-
-                boardData[lineVal][macVal].push({
+                boardData[lineVal][sortDate].macs[macVal].push({
                     title: titleVal,
-                    dateStr: shortDate,
                     itemName: getColValue(row, 'ITEM_NAME') || '-',
                     timeStart: extractTimeOnly(getColValue(row, 'PROD_TIME_START')),
                     timeFinish: extractTimeOnly(getColValue(row, 'PROD_TIME_FINISH')),
@@ -611,28 +609,48 @@
 
             let htmlOut = '';
             Object.keys(boardData).sort().forEach(line => {
-                htmlOut += `<div class="mb-8"><h4 class="font-bold text-xl text-slate-800 mb-4 border-l-4 border-blue-600 pl-2">Line: ${line}</h4><div class="flex overflow-x-auto gap-4 pb-4 px-1 custom-scrollbar snap-x">`;
-                Object.keys(boardData[line]).sort().forEach(mac => {
-                    const batches = boardData[line][mac].sort((a,b) => a.rawStart < b.rawStart ? -1 : 1);
-                    const totalQtyToday = batches.reduce((sum, b) => sum + b.qty, 0);
-                    const pctCap = MAC_CAPACITY[mac] > 0 ? Math.round((totalQtyToday / MAC_CAPACITY[mac]) * 100) : 0;
-                    
-                    htmlOut += `<div class="min-w-[320px] max-w-[320px] bg-slate-200/60 p-4 rounded-xl shrink-0 snap-start border border-slate-200 shadow-sm flex flex-col max-h-[600px]">
-                                    <div class="flex justify-between items-center mb-2"><h5 class="font-bold text-slate-800 text-lg">${mac}</h5><span class="bg-white text-xs font-bold px-2 py-1 rounded shadow-sm">${batches.length} Jobs</span></div>
-                                    <div class="mb-4"><div class="flex justify-between text-[10px] text-slate-500 mb-1 font-medium"><span>โหลดงานรวม: ${totalQtyToday.toLocaleString()} KG</span><span>${pctCap}%</span></div><div class="w-full bg-slate-300 rounded-full h-1.5"><div class="${pctCap > 100 ? 'bg-rose-500' : 'bg-blue-500'} h-1.5 rounded-full" style="width: ${Math.min(pctCap, 100)}%"></div></div></div>
+                htmlOut += `<div class="mb-8"><h4 class="font-bold text-xl text-slate-800 mb-4 border-l-4 border-blue-600 pl-2">Line: ${line}</h4><div class="flex items-start overflow-x-auto gap-4 pb-4 px-1 custom-scrollbar snap-x">`;
+                
+                Object.keys(boardData[line]).sort().forEach(sortDate => {
+                    const dateData = boardData[line][sortDate];
+                    let totalJobsInDate = 0;
+                    Object.keys(dateData.macs).forEach(m => totalJobsInDate += dateData.macs[m].length);
+
+                    htmlOut += `<div class="min-w-[340px] max-w-[340px] bg-slate-200/60 p-4 rounded-xl shrink-0 snap-start border border-slate-200 shadow-sm flex flex-col max-h-[700px]">
+                                    <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-300">
+                                        <h5 class="font-bold text-slate-800 text-lg flex items-center gap-2">🗓️ ${dateData.displayDate}</h5>
+                                        <span class="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded shadow-sm">${totalJobsInDate} Jobs</span>
+                                    </div>
                                     <div class="overflow-y-auto custom-scrollbar flex-grow pr-1">`;
-                    batches.forEach(b => {
-                        htmlOut += `<div class="p-3 rounded-lg shadow-sm mb-3 border-l-4 ${b.statusColor} relative group">
-                                        <div class="flex justify-between items-start mb-1.5">
-                                            <div class="font-semibold text-slate-800 text-sm truncate pr-2" title="${b.title}">${b.title}</div>
-                                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${b.statusBg}">${b.statusText}</span>
+                    
+                    Object.keys(dateData.macs).sort().forEach(mac => {
+                        const batches = dateData.macs[mac].sort((a,b) => a.rawStart < b.rawStart ? -1 : 1);
+                        const totalQtyToday = batches.reduce((sum, b) => sum + b.qty, 0);
+                        const pctCap = MAC_CAPACITY[mac] > 0 ? Math.round((totalQtyToday / MAC_CAPACITY[mac]) * 100) : 0;
+                        
+                        htmlOut += `<div class="mb-4 bg-slate-100 p-2.5 rounded-lg border border-slate-200 shadow-inner">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <h6 class="font-bold text-slate-700 text-sm">💻 ${mac}</h6>
                                         </div>
-                                        <div class="text-xs text-slate-600 font-medium mb-1 line-clamp-2">${b.itemName}</div>
-                                        <div class="flex justify-between items-end mt-2 pt-2 border-t border-slate-100/50">
-                                            <div class="text-[10px] font-medium text-slate-500 truncate" title="วันที่: ${b.dateStr} | เวลา: ${b.timeStart} - ${b.timeFinish}">🗓️ ${b.dateStr} ⏱️ ${b.timeStart}</div>
-                                            <div class="text-xs font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded ml-1 shrink-0">${b.qty.toLocaleString()} KG</div>
-                                        </div>
-                                    </div>`;
+                                        <div class="mb-3">
+                                            <div class="flex justify-between text-[10px] text-slate-500 mb-1 font-medium"><span>โหลดงานรวม: ${totalQtyToday.toLocaleString()} KG</span><span>${pctCap}%</span></div>
+                                            <div class="w-full bg-slate-300 rounded-full h-1.5"><div class="${pctCap > 100 ? 'bg-rose-500' : 'bg-blue-500'} h-1.5 rounded-full" style="width: ${Math.min(pctCap, 100)}%"></div></div>
+                                        </div>`;
+                        
+                        batches.forEach(b => {
+                            htmlOut += `<div class="p-3 rounded-lg shadow-sm mb-2 border-l-4 ${b.statusColor} bg-white relative group">
+                                            <div class="flex justify-between items-start mb-1.5">
+                                                <div class="font-semibold text-slate-800 text-sm truncate pr-2" title="${b.title}">${b.title}</div>
+                                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${b.statusBg}">${b.statusText}</span>
+                                            </div>
+                                            <div class="text-xs text-slate-600 font-medium mb-1 line-clamp-2">${b.itemName}</div>
+                                            <div class="flex justify-between items-end mt-2 pt-2 border-t border-slate-100/50">
+                                                <div class="text-[10px] font-medium text-slate-500 truncate" title="เวลา: ${b.timeStart} - ${b.timeFinish}">⏱️ ${b.timeStart} - ${b.timeFinish}</div>
+                                                <div class="text-xs font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded ml-1 shrink-0">${b.qty.toLocaleString()} KG</div>
+                                            </div>
+                                        </div>`;
+                        });
+                        htmlOut += `</div>`;
                     });
                     htmlOut += `</div></div>`;
                 });
