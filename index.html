@@ -115,11 +115,21 @@
 
         <div class="mt-6">
             <div class="flex justify-between items-center px-2 mb-3 cursor-pointer hover:bg-slate-200/50 p-2 -mx-2 rounded-lg transition-colors" onclick="toggleSection('wrapper-dailyplan', 'icon-dailyplan')">
-                <div class="flex items-center gap-4">
+                <div class="flex flex-wrap items-center gap-4">
                     <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
                         <span class="text-xl">📅</span> กระดานแผนการผลิตรายวัน (Daily Kanban Board)
                     </h3>
-                    <input type="date" id="dailyPlanDate" class="bg-white border border-slate-300 text-sm rounded-lg p-1.5 px-3 focus:outline-none focus:border-blue-500 font-bold text-blue-700 cursor-auto shadow-sm" onclick="event.stopPropagation();" onchange="updateDailyPlanBoard()">
+                    <div class="flex flex-wrap items-center gap-2" onclick="event.stopPropagation();">
+                        <!-- 💡 ปุ่มคีย์ลัดอัจฉริยะ -->
+                        <button class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold py-1.5 px-3 rounded shadow-sm transition-colors" onclick="setKanbanQuickDate('yesterday')">เมื่อวาน</button>
+                        <button class="bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-bold py-1.5 px-3 rounded shadow-sm transition-colors" onclick="setKanbanQuickDate('today')">วันนี้</button>
+                        <button class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold py-1.5 px-3 rounded shadow-sm transition-colors" onclick="setKanbanQuickDate('tomorrow')">พรุ่งนี้</button>
+                        <span class="text-slate-300 mx-1 hidden md:inline">|</span>
+                        <!-- 💡 เปลี่ยนเป็นระบบช่วงวันที่ (Start-End) -->
+                        <input type="date" id="dailyPlanDateStart" class="bg-white border border-slate-300 text-xs md:text-sm rounded p-1 md:p-1.5 focus:outline-none focus:border-blue-500 font-bold text-blue-700 shadow-sm" onchange="updateDailyPlanBoard()">
+                        <span class="text-slate-500 text-xs font-medium">ถึง</span>
+                        <input type="date" id="dailyPlanDateEnd" class="bg-white border border-slate-300 text-xs md:text-sm rounded p-1 md:p-1.5 focus:outline-none focus:border-blue-500 font-bold text-blue-700 shadow-sm" onchange="updateDailyPlanBoard()">
+                    </div>
                 </div>
                 <svg id="icon-dailyplan" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             </div>
@@ -527,20 +537,46 @@
         }
 
         // ========================================================
-        // 💡 ระบบ Daily Plan Board (Kanban)
+        // 💡 ระบบ Daily Plan Board (Kanban) ปรับปรุงใหม่ให้รองรับช่วงเวลา
         // ========================================================
+        
+        // ฟังก์ชันคีย์ลัด เมื่อวาน/วันนี้/พรุ่งนี้
+        function setKanbanQuickDate(type) {
+            const targetDate = new Date();
+            if (type === 'yesterday') targetDate.setDate(targetDate.getDate() - 1);
+            else if (type === 'tomorrow') targetDate.setDate(targetDate.getDate() + 1);
+            
+            const y = targetDate.getFullYear();
+            const m = String(targetDate.getMonth() + 1).padStart(2, '0');
+            const d = String(targetDate.getDate()).padStart(2, '0');
+            const dateStr = `${y}-${m}-${d}`;
+            
+            document.getElementById('dailyPlanDateStart').value = dateStr;
+            document.getElementById('dailyPlanDateEnd').value = dateStr;
+            if (rawData && rawData.length > 0) updateDailyPlanBoard();
+        }
+
         function updateDailyPlanBoard() {
-            const dateInput = document.getElementById('dailyPlanDate').value;
+            const startDateInput = document.getElementById('dailyPlanDateStart').value;
+            const endDateInput = document.getElementById('dailyPlanDateEnd').value;
             const container = document.getElementById('dailyPlanContainer');
-            if (!dateInput) { container.innerHTML = `<div class="text-center py-10 text-slate-500">กรุณาเลือกวันที่</div>`; return; }
+            
+            if (!startDateInput && !endDateInput) { container.innerHTML = `<div class="text-center py-10 text-slate-500">กรุณาเลือกวันที่ที่ต้องการดูข้อมูล</div>`; return; }
+
+            // หากเลือกวันเดียว ให้ใช้วันนั้นเป็นทั้งจุดเริ่มต้นและสิ้นสุด
+            let start = startDateInput || endDateInput;
+            let end = endDateInput || startDateInput;
+            if (start > end) { let tmp = start; start = end; end = tmp; } // สลับหากเลือกวันที่กลับด้าน
 
             const dailyData = rawData.filter(row => {
                 const dateVal = getColValue(row, 'PRODUCTION_DATE') || getColValue(row, 'PROD_TIME_START');
                 const { y, m, d } = extractDateParts(dateVal);
-                return `${y}-${m}-${d}` === dateInput;
+                if (!y) return false;
+                const rowDate = `${y}-${m}-${d}`;
+                return rowDate >= start && rowDate <= end;
             });
 
-            if (dailyData.length === 0) { container.innerHTML = `<div class="text-center py-10 text-slate-500 bg-white rounded-xl">ไม่พบแผนการผลิตในวันที่เลือก 📭</div>`; return; }
+            if (dailyData.length === 0) { container.innerHTML = `<div class="text-center py-10 text-slate-500 bg-white rounded-xl">ไม่พบแผนการผลิตในช่วงวันที่เลือก 📭</div>`; return; }
 
             const boardData = {};
             dailyData.forEach(row => {
@@ -558,8 +594,14 @@
 
                 const titleVal = getColValue(row, 'ชื่อเรื่อง') || getColValue(row, 'Title') || getColValue(row, 'Batch No') || getColValue(row, 'ORDER_NO') || '-';
 
+                // ดึงข้อมูลวันที่ย่อไปโชว์ในการ์ดด้วย ป้องกันการสับสนเวลาดูหลายวัน
+                const dateVal = getColValue(row, 'PRODUCTION_DATE') || getColValue(row, 'PROD_TIME_START');
+                const { y, m, d } = extractDateParts(dateVal);
+                const shortDate = y ? `${d}/${m}/${y.substring(2)}` : '-';
+
                 boardData[lineVal][macVal].push({
                     title: titleVal,
+                    dateStr: shortDate,
                     itemName: getColValue(row, 'ITEM_NAME') || '-',
                     timeStart: extractTimeOnly(getColValue(row, 'PROD_TIME_START')),
                     timeFinish: extractTimeOnly(getColValue(row, 'PROD_TIME_FINISH')),
@@ -577,7 +619,7 @@
                     
                     htmlOut += `<div class="min-w-[320px] max-w-[320px] bg-slate-200/60 p-4 rounded-xl shrink-0 snap-start border border-slate-200 shadow-sm flex flex-col max-h-[600px]">
                                     <div class="flex justify-between items-center mb-2"><h5 class="font-bold text-slate-800 text-lg">${mac}</h5><span class="bg-white text-xs font-bold px-2 py-1 rounded shadow-sm">${batches.length} Jobs</span></div>
-                                    <div class="mb-4"><div class="w-full bg-slate-300 rounded-full h-1.5"><div class="${pctCap > 100 ? 'bg-rose-500' : 'bg-blue-500'} h-1.5 rounded-full" style="width: ${Math.min(pctCap, 100)}%"></div></div></div>
+                                    <div class="mb-4"><div class="flex justify-between text-[10px] text-slate-500 mb-1 font-medium"><span>โหลดงานรวม: ${totalQtyToday.toLocaleString()} KG</span><span>${pctCap}%</span></div><div class="w-full bg-slate-300 rounded-full h-1.5"><div class="${pctCap > 100 ? 'bg-rose-500' : 'bg-blue-500'} h-1.5 rounded-full" style="width: ${Math.min(pctCap, 100)}%"></div></div></div>
                                     <div class="overflow-y-auto custom-scrollbar flex-grow pr-1">`;
                     batches.forEach(b => {
                         htmlOut += `<div class="p-3 rounded-lg shadow-sm mb-3 border-l-4 ${b.statusColor} relative group">
@@ -587,8 +629,8 @@
                                         </div>
                                         <div class="text-xs text-slate-600 font-medium mb-1 line-clamp-2">${b.itemName}</div>
                                         <div class="flex justify-between items-end mt-2 pt-2 border-t border-slate-100/50">
-                                            <div class="text-xs text-slate-500">${b.timeStart} - ${b.timeFinish}</div>
-                                            <div class="text-xs font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">${b.qty.toLocaleString()} KG</div>
+                                            <div class="text-[10px] font-medium text-slate-500 truncate" title="วันที่: ${b.dateStr} | เวลา: ${b.timeStart} - ${b.timeFinish}">🗓️ ${b.dateStr} ⏱️ ${b.timeStart}</div>
+                                            <div class="text-xs font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded ml-1 shrink-0">${b.qty.toLocaleString()} KG</div>
                                         </div>
                                     </div>`;
                     });
@@ -675,9 +717,7 @@
                 }
             });
             
-            if (rawData.length > 0 && !document.getElementById('dailyPlanDate').value && maxDateStr !== "0000-00-00") {
-                document.getElementById('dailyPlanDate').value = maxDateStr;
-            }
+            // 💡 เรียกใช้อัปเดตตาราง Kanban หากมีข้อมูล (ระบบวันที่จะเช็คให้แล้ว)
             if(rawData.length > 0) updateDailyPlanBoard();
 
             // 3. คำนวณวันทำงานจริง และ OT
@@ -1047,6 +1087,8 @@
             reader.readAsArrayBuffer(file); e.target.value = ''; 
         });
 
+        // 💡 กำหนดวันที่ค่าเริ่มต้นเป็น "วันนี้" ทุกครั้งที่เปิดหน้า Dashboard
+        setKanbanQuickDate('today');
         initFilters();
     </script>
 </body>
