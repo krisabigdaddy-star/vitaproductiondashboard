@@ -76,7 +76,7 @@
 
         <div>
             <div class="flex justify-between items-center px-2 mb-3 cursor-pointer hover:bg-slate-200/50 p-2 -mx-2 rounded-lg transition-colors" onclick="toggleSection('wrapper-kpis', 'icon-kpis')">
-                <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2"><span class="text-xl">📊</span> สรุปภาพรวม (KPIs)</h3>
+                <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2"><span class="text-xl">📊</span> สรุปภาพรวมโรงงาน (Factory KPIs)</h3>
                 <svg id="icon-kpis" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             </div>
             <div id="wrapper-kpis" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 relative z-30">
@@ -111,6 +111,17 @@
                     <h3 id="kpiIssues" class="text-2xl font-bold text-slate-800">0 <span class="text-sm font-normal text-slate-400">ครั้ง</span></h3>
                 </div>
             </div>
+            
+            <!-- 💡 อัปเกรด: การ์ด OEE สรุปผลรายไลน์ผลิต -->
+            <div class="mt-4 bg-slate-100/50 rounded-2xl p-4 border border-slate-200">
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="text-sm font-bold text-slate-700 flex items-center gap-2"><svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> ประสิทธิภาพเครื่องจักรโดยรวม (OEE - Overall Equipment Effectiveness)</h4>
+                    <span class="text-[10px] text-slate-400 font-medium hidden sm:inline">*อ้างอิงสูตรคำนวณจากข้อมูล USAGE_TIME และ MAC_CAPACITY</span>
+                </div>
+                <div id="lineKpisContainer" class="flex overflow-x-auto gap-3 pb-2 custom-scrollbar snap-x">
+                    <div class="text-sm text-slate-500 italic py-2">กำลังรอประมวลผลข้อมูล...</div>
+                </div>
+            </div>
         </div>
 
         <div class="mt-6">
@@ -120,12 +131,10 @@
                         <span class="text-xl">📅</span> กระดานแผนการผลิตรายวัน (Daily Kanban Board)
                     </h3>
                     <div class="flex flex-wrap items-center gap-2" onclick="event.stopPropagation();">
-                        <!-- 💡 ปุ่มคีย์ลัดอัจฉริยะ -->
                         <button class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold py-1.5 px-3 rounded shadow-sm transition-colors" onclick="setKanbanQuickDate('yesterday')">เมื่อวาน</button>
                         <button class="bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-bold py-1.5 px-3 rounded shadow-sm transition-colors" onclick="setKanbanQuickDate('today')">วันนี้</button>
                         <button class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold py-1.5 px-3 rounded shadow-sm transition-colors" onclick="setKanbanQuickDate('tomorrow')">พรุ่งนี้</button>
                         <span class="text-slate-300 mx-1 hidden md:inline">|</span>
-                        <!-- 💡 เปลี่ยนเป็นระบบช่วงวันที่ (Start-End) -->
                         <input type="date" id="dailyPlanDateStart" class="bg-white border border-slate-300 text-xs md:text-sm rounded p-1 md:p-1.5 focus:outline-none focus:border-blue-500 font-bold text-blue-700 shadow-sm" onchange="updateDailyPlanBoard()">
                         <span class="text-slate-500 text-xs font-medium">ถึง</span>
                         <input type="date" id="dailyPlanDateEnd" class="bg-white border border-slate-300 text-xs md:text-sm rounded p-1 md:p-1.5 focus:outline-none focus:border-blue-500 font-bold text-blue-700 shadow-sm" onchange="updateDailyPlanBoard()">
@@ -140,23 +149,6 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100 relative z-20 mt-6">
-            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3 cursor-pointer hover:opacity-70 transition-opacity" onclick="toggleSection('wrapper-macutil', 'icon-macutil')">
-                <div class="flex items-center gap-2">
-                    <h3 class="font-bold text-slate-800 flex items-center gap-2">
-                        <span class="text-xl">⏱️</span> อัตราการใช้ประโยชน์เครื่องจักร (True Machine Utilization)
-                    </h3>
-                    <span id="factoryTimeLabel" class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">กำลังประมวลผลวันทำงานจริง...</span>
-                </div>
-                <svg id="icon-macutil" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-            </div>
-            <div id="wrapper-macutil">
-                <div id="macUtilizationContainer" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                    <div class="col-span-full text-center text-slate-500 py-6 font-medium">ยังไม่มีข้อมูล 📊</div>
-                </div>
-            </div>
-        </div>
-
         <div class="mt-6">
             <div class="flex justify-between items-center px-2 mb-3 cursor-pointer hover:bg-slate-200/50 p-2 -mx-2 rounded-lg transition-colors" onclick="toggleSection('wrapper-charts1', 'icon-charts1')">
                 <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2"><span class="text-xl">📈</span> รายงานการผลิตและสถานะ</h3>
@@ -164,9 +156,12 @@
             </div>
             <div id="wrapper-charts1" class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 relative z-10">
                 <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100 lg:col-span-2">
-                    <div class="flex justify-between items-center mb-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                         <h3 class="font-bold text-slate-800">ยอดผลิตเปรียบเทียบกำลังการผลิตแยกตามไลน์ (Actual vs Capacity)</h3>
-                        <span class="text-xs font-semibold text-white bg-blue-500 px-3 py-1 rounded-full shadow-sm">คำนวณเฉพาะเครื่องที่เปิดผลิตจริง</span>
+                        <div class="flex items-center gap-2">
+                            <span id="machineChartModeBadge" class="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-2 py-1 rounded shadow-sm border border-indigo-200">โหมด: รวมผล (Summary)</span>
+                            <span class="text-xs font-semibold text-white bg-blue-500 px-3 py-1 rounded-full shadow-sm">คำนวณเฉพาะเครื่องที่เปิดผลิตจริง</span>
+                        </div>
                     </div>
                     <div class="relative h-72 w-full">
                         <canvas id="machineChart"></canvas>
@@ -185,6 +180,23 @@
                         <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-rose-400"></span> Abort</div>
                         <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-amber-400"></span> Reserved</div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100 relative z-20 mt-6">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3 cursor-pointer hover:opacity-70 transition-opacity" onclick="toggleSection('wrapper-macutil', 'icon-macutil')">
+                <div class="flex items-center gap-2">
+                    <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                        <span class="text-xl">⏱️</span> อัตราการใช้ประโยชน์เครื่องจักร (True Machine Utilization)
+                    </h3>
+                    <span id="factoryTimeLabel" class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">กำลังประมวลผลวันทำงานจริง...</span>
+                </div>
+                <svg id="icon-macutil" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+            <div id="wrapper-macutil">
+                <div id="macUtilizationContainer" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <div class="col-span-full text-center text-slate-500 py-6 font-medium">ยังไม่มีข้อมูล 📊</div>
                 </div>
             </div>
         </div>
@@ -365,51 +377,73 @@
                 type: 'bar',
                 data: {
                     labels: [],
-                    datasets: [
-                        {
-                            type: 'bar', label: 'ยอดผลิตจริง (Actual QTY)', data: [],
-                            backgroundColor: 'rgba(59, 130, 246, 0.8)', hoverBackgroundColor: 'rgba(37, 99, 235, 1)', 
-                            borderRadius: 4, barThickness: 40, order: 2
-                        },
-                        {
-                            type: 'line', label: 'เป้ากำลังผลิตสูงสุด (Max Capacity)', data: [],
-                            borderColor: 'rgba(239, 68, 68, 1)', backgroundColor: 'rgba(239, 68, 68, 1)',
-                            borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, fill: false, borderDash: [5, 5], order: 1
-                        }
-                    ]
+                    datasets: [] 
                 },
                 options: { 
                     responsive: true, maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: true, position: 'top', labels: { font: { family: "'Sarabun', sans-serif", size: 12 } } },
+                        legend: { display: true, position: 'top', labels: { font: { family: "'Sarabun', sans-serif", size: 12 }, usePointStyle: true, boxWidth: 8 } },
                         tooltip: {
-                            backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12,
-                            titleFont: { size: 14, family: "'Sarabun', sans-serif" }, bodyFont: { size: 13, family: "'Sarabun', sans-serif" },
+                            mode: 'index', intersect: false,
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)', padding: 12,
+                            titleFont: { size: 14, family: "'Sarabun', sans-serif", weight: 'bold' }, bodyFont: { size: 13, family: "'Sarabun', sans-serif" },
                             callbacks: {
-                                label: function(context) { return ` ${context.dataset.label}: ${context.parsed.y.toLocaleString()} KG`; },
-                                afterLabel: function(context) {
-                                    const actual = context.chart.data.datasets[0].data[context.dataIndex] || 0;
-                                    const cap = context.chart.data.datasets[1].data[context.dataIndex] || 0;
-                                    const lineName = context.label;
+                                title: function(context) { return '🏭 ไลน์การผลิต: ' + context[0].label; },
+                                label: function(context) {
+                                    const ds = context.dataset;
+                                    const val = context.parsed.y;
+                                    if (val === 0 || isNaN(val)) return null;
+                                    if (ds.label.includes('Max Cap')) return null;
                                     
-                                    if (cap > 0 && context.datasetIndex === 0) { 
-                                        const diff = cap - actual;
-                                        const percent = ((actual / cap) * 100).toFixed(1);
-                                        const diffPercent = Math.abs((diff / cap) * 100).toFixed(1);
+                                    let groupName = '';
+                                    if (ds.label.includes('(')) groupName = ' ' + ds.label.substring(ds.label.indexOf('('));
+                                    return ` 📦 ผลิตจริง${groupName}: ${val.toLocaleString()} KG`;
+                                },
+                                afterLabel: function(context) {
+                                    const ds = context.dataset;
+                                    const actualVal = context.parsed.y;
+                                    if (actualVal === 0 || isNaN(actualVal) || ds.label.includes('Max Cap')) return null;
+
+                                    const lineName = context.label;
+                                    const allDatasets = context.chart.data.datasets;
+                                    
+                                    let capVal = 0; let capDsLabel = '';
+                                    let timeIdentifier = '';
+                                    if (ds.label.includes('(')) timeIdentifier = ds.label.substring(ds.label.indexOf('('));
+                                    
+                                    for(let i=0; i<allDatasets.length; i++) {
+                                        if (allDatasets[i].label.includes('Max Cap') && (!timeIdentifier || allDatasets[i].label.includes(timeIdentifier))) {
+                                            capVal = allDatasets[i].data[context.dataIndex] || 0;
+                                            capDsLabel = allDatasets[i].label;
+                                            break;
+                                        }
+                                    }
+                                    
+                                    if (capVal > 0) { 
+                                        const diff = capVal - actualVal;
+                                        const percent = ((actualVal / capVal) * 100).toFixed(1);
+                                        const diffPercent = Math.abs((diff / capVal) * 100).toFixed(1);
                                         
-                                        const days = (window.currentLineDays && window.currentLineDays[lineName]) ? window.currentLineDays[lineName].size : 0;
-                                        const otMins = (window.currentLineOT && window.currentLineOT[lineName]) ? window.currentLineOT[lineName] : 0;
-                                        const otHours = (otMins / 60).toFixed(1);
+                                        let days = 0, otHours = 0;
+                                        if (window.currentLineMetrics && window.currentLineMetrics[lineName]) {
+                                            const metricsKey = timeIdentifier ? timeIdentifier.replace(/[()]/g, '').trim() : 'summary';
+                                            if (window.currentLineMetrics[lineName][metricsKey]) {
+                                                days = window.currentLineMetrics[lineName][metricsKey].days || 0;
+                                                const otMins = window.currentLineMetrics[lineName][metricsKey].otMins || 0;
+                                                otHours = (otMins / 60).toFixed(1);
+                                            }
+                                        }
                                         
                                         let lines = [];
+                                        lines.push(` 🎯 เป้าหมาย: ${capVal.toLocaleString()} KG`);
                                         lines.push(` ----------------------------------`);
                                         lines.push(` ⏱️ ทำงานจริง: ${days} วัน (OT: ${otHours} ชม.)`);
-                                        lines.push(` 📊 ประสิทธิภาพ (Efficiency): ${percent}%`);
+                                        lines.push(` 📊 ประสิทธิภาพรวม (OEE ~ Eff.): ${percent}%`);
                                         
                                         if (diff > 0) lines.push(` 📉 ส่วนต่าง: ต่ำกว่าเป้า ${diff.toLocaleString()} KG (${diffPercent}%)`);
                                         else if (diff < 0) lines.push(` 📈 ส่วนต่าง: ทะลุเป้า ${Math.abs(diff).toLocaleString()} KG (+${diffPercent}%)`);
                                         else lines.push(` ✅ ส่วนต่าง: พอดีเป้าหมาย (0%)`);
-                                        
+                                        lines.push('');
                                         return lines;
                                     }
                                     return null;
@@ -537,9 +571,8 @@
         }
 
         // ========================================================
-        // 💡 ระบบ Daily Plan Board (Kanban) ปรับปรุงให้คอลัมน์เป็นวันที่
+        // 💡 ระบบ Daily Plan Board (Kanban)
         // ========================================================
-        
         function setKanbanQuickDate(type) {
             const targetDate = new Date();
             if (type === 'yesterday') targetDate.setDate(targetDate.getDate() - 1);
@@ -699,26 +732,55 @@
         function updateDashboard() {
             const fYear = filterInstances['filterYear']?.getValue(true) || [];
             const fMonth = filterInstances['filterMonth']?.getValue(true) || [];
+            const fDay = filterInstances['filterDay']?.getValue(true) || [];
             const fLine = filterInstances['filterLine']?.getValue(true) || [];
             const fMac = filterInstances['filterMac']?.getValue(true) || [];
             const fItem = document.getElementById('filterItem').value.trim().toLowerCase();
 
+            // --- 💡 กำหนดโหมดของกราฟเปรียบเทียบ (Time Series / Grouped Bar) ---
+            let compareMode = 'summary'; 
+            let compareKeys = [];
+            
+            if (fDay.length > 1 && fMonth.length <= 1 && fYear.length <= 1) {
+                compareMode = 'day'; compareKeys = [...fDay].sort();
+            } else if (fMonth.length > 1 && fYear.length <= 1) {
+                compareMode = 'month'; compareKeys = [...fMonth].sort();
+            } else if (fYear.length > 1 && fMonth.length <= 1) {
+                compareMode = 'year'; compareKeys = [...fYear].sort();
+            } else if (fYear.length >= 1 && fMonth.length >= 1 && (fYear.length * fMonth.length > 1)) {
+                compareMode = 'year_month';
+                fYear.sort().forEach(y => { fMonth.sort().forEach(m => { compareKeys.push(`${y}-${m}`); }); });
+            } else if (fDay.length > 0 || fMonth.length > 0 || fYear.length > 0) {
+                 compareMode = 'summary';
+            }
+            
+            const badgeLabel = document.getElementById('machineChartModeBadge');
+            if (badgeLabel) {
+                if (compareMode === 'summary') {
+                    badgeLabel.innerText = 'โหมด: รวมผล (Summary)'; badgeLabel.className = 'text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded shadow-sm border border-slate-200';
+                } else {
+                    badgeLabel.innerText = `โหมด: เปรียบเทียบข้ามเวลา (${compareMode})`; badgeLabel.className = 'text-[10px] font-bold text-indigo-700 bg-indigo-100 px-2 py-1 rounded shadow-sm border border-indigo-200';
+                }
+            }
+
+
             // 1. กรองข้อมูลตาม Slicer
             const filteredData = rawData.filter(row => {
-                const { y, m } = extractDateParts(getColValue(row, 'PRODUCTION_DATE'));
+                const { y, m, d } = extractDateParts(getColValue(row, 'PRODUCTION_DATE'));
                 const mac = String(getColValue(row, 'MAC') || '').trim();
                 const line = getLineFromMac(mac);
                 const item = String(getColValue(row, 'ITEM CODE') || getColValue(row, 'ITEM_CODE') || '').toLowerCase();
                 
                 if (fYear.length && !fYear.includes(y)) return false;
                 if (fMonth.length && !fMonth.includes(m)) return false;
+                if (fDay.length && !fDay.includes(d)) return false;
                 if (fLine.length && !fLine.includes(line)) return false;
                 if (fMac.length && !fMac.includes(mac)) return false;
                 if (fItem && !item.includes(fItem)) return false;
                 return true;
             });
 
-            // 2. ลอจิกใหม่: หาว่า "เครื่องจักรไหน เปิดทำงานวันที่เท่าไหร่บ้าง" 
+            // 2. ลอจิก: หาว่าเครื่องจักรเปิดทำงานวันไหนบ้าง
             let minDateStr = "9999-99-99", maxDateStr = "0000-00-00";
             const activeMacs = new Set();
             const macActiveDays = {}; 
@@ -735,21 +797,25 @@
                 }
             });
             
-            // 💡 เรียกใช้อัปเดตตาราง Kanban หากมีข้อมูล (ระบบวันที่จะเช็คให้แล้ว)
             if(rawData.length > 0) updateDailyPlanBoard();
 
-            // 3. คำนวณวันทำงานจริง และ OT
+            // โครงสร้างข้อมูล KPI หลัก
             let totalWorkingDays = 0, totalOTMinutes = 0;
             const macAvailableMinsDict = {};
             const lineDict = {};      
             const lineCapDict = {};   
             const lineDaysDict = {};  
             const lineOTDict = {};    
-            const macTotalTimeDict = {}; 
+            const macTotalTimeDict = {};
+            const lineUsageTimeDict = {}; // 💡 สำหรับคำนวณ Availability ของไลน์
+            const lineAvailMinsDict = {}; // 💡 สำหรับคำนวณ Availability ของไลน์
+
+            const lineTimeSeriesData = {};
 
             let orderTrendMode = 'monthly';
             let maxYearStr = maxDateStr !== "0000-00-00" ? maxDateStr.substring(0,4) : new Date().getFullYear().toString();
 
+            // 3. คำนวณวันทำงานจริง และ OT (ลูปรายวัน)
             if (minDateStr !== "9999-99-99" && maxDateStr !== "0000-00-00") {
                 let currentD = new Date(minDateStr);
                 const maxD = new Date(maxDateStr);
@@ -761,6 +827,13 @@
                 while (currentD <= maxD) {
                     const y = currentD.getFullYear(), m = String(currentD.getMonth() + 1).padStart(2, '0'), d = String(currentD.getDate()).padStart(2, '0');
                     const dateStr = `${y}-${m}-${d}`;
+                    
+                    let timeKey = 'summary';
+                    if (compareMode === 'day') timeKey = d;
+                    else if (compareMode === 'month') timeKey = m;
+                    else if (compareMode === 'year') timeKey = y;
+                    else if (compareMode === 'year_month') timeKey = `${y}-${m}`;
+                    
                     const isWeekend = (currentD.getDay() === 0 || currentD.getDay() === 6);
                     let baseMins = isWeekend ? 0 : 480;
                     let isGlobalHoliday = calendarMap[dateStr]?.some(e => e.type === 'HOLIDAY' && e.macs.includes('ALL')) || false;
@@ -785,13 +858,23 @@
                             if (dailyMins > 0) dayHasWork = true;
                             
                             const lineVal = getLineFromMac(mac);
+                            
                             if (!lineCapDict[lineVal]) { lineCapDict[lineVal] = 0; lineDaysDict[lineVal] = new Set(); lineOTDict[lineVal] = 0; lineDict[lineVal] = 0; }
+                            if (!lineTimeSeriesData[lineVal]) lineTimeSeriesData[lineVal] = {};
+                            if (!lineTimeSeriesData[lineVal][timeKey]) lineTimeSeriesData[lineVal][timeKey] = { actual: 0, cap: 0, daysSet: new Set(), otMins: 0 };
                             
                             const macDailyCap = MAC_CAPACITY[mac] || 0;
-                            lineCapDict[lineVal] += (macDailyCap / 480) * dailyMins;
+                            const capacityAdded = (macDailyCap / 480) * dailyMins;
+                            
+                            lineCapDict[lineVal] += capacityAdded;
+                            lineAvailMinsDict[lineVal] = (lineAvailMinsDict[lineVal] || 0) + dailyMins; // 💡 เก็บนาทีพร้อมทำงานรวมระดับไลน์
                             if (dailyMins > 0) lineDaysDict[lineVal].add(dateStr);
                             lineOTDict[lineVal] += dailyOT;
                             totalOTMinutes += dailyOT;
+                            
+                            lineTimeSeriesData[lineVal][timeKey].cap += capacityAdded;
+                            if (dailyMins > 0) lineTimeSeriesData[lineVal][timeKey].daysSet.add(dateStr);
+                            lineTimeSeriesData[lineVal][timeKey].otMins += dailyOT;
                         }
                     });
                     if (dayHasWork) totalWorkingDays++;
@@ -811,6 +894,7 @@
             const batchCapTrendDict = {}; 
             const orderTrendDict = {}; 
             const activeLinesForOrder = new Set();
+            const lineKpiData = {};
 
             filteredData.forEach(row => {
                 const { y: rowYear, m: rowMonth, d: rowDay } = extractDateParts(getColValue(row, 'PRODUCTION_DATE'));
@@ -820,15 +904,29 @@
                 const lineVal = getLineFromMac(macVal);
                 const batchNo = getColValue(row, 'ชื่อเรื่อง') || getColValue(row, 'Title') || getColValue(row, 'Batch No') || getColValue(row, 'ORDER_NO');
                 
+                let timeKey = 'summary';
+                if (compareMode === 'day') timeKey = rowDay;
+                else if (compareMode === 'month') timeKey = rowMonth;
+                else if (compareMode === 'year') timeKey = rowYear;
+                else if (compareMode === 'year_month') timeKey = `${rowYear}-${rowMonth}`;
+                
                 totalQty += qty;
                 if (lineVal && lineDict[lineVal] !== undefined) lineDict[lineVal] += qty;
                 else if (lineVal) lineDict[lineVal] = qty;
+                
+                if (lineVal) {
+                    if (!lineTimeSeriesData[lineVal]) lineTimeSeriesData[lineVal] = {};
+                    if (!lineTimeSeriesData[lineVal][timeKey]) lineTimeSeriesData[lineVal][timeKey] = { actual: 0, cap: 0, daysSet: new Set(), otMins: 0 };
+                    lineTimeSeriesData[lineVal][timeKey].actual += qty;
+                }
 
                 let rawTime = getColValue(row, 'USAGE_TIME'); let time = Number(String(rawTime).replace(/,/g, '')) || 0;
                 if (time > 0) { totalTime += time; batchesWithTime++; }
                 if (lineVal && time > 0) {
                     if (!lineThroughputData[lineVal]) lineThroughputData[lineVal] = { totalQty:0, totalTime:0 };
                     lineThroughputData[lineVal].totalQty += qty; lineThroughputData[lineVal].totalTime += time;
+                    
+                    lineUsageTimeDict[lineVal] = (lineUsageTimeDict[lineVal] || 0) + time; // 💡 เก็บเวลาใช้งานจริงรวมระดับไลน์
                 }
                 
                 if (macVal && time > 0) {
@@ -842,7 +940,6 @@
                     lineYieldData[lineVal].totalProd += qty; lineYieldData[lineVal].totalOrder += qtyOrder;
                 }
 
-                // การสะสมกราฟ Order QTY
                 if (normalizedDate && qtyOrderTons > 0) {
                     if (orderTrendMode === 'monthly') {
                         let bucketKey = `${rowYear}-${rowMonth}`; let displayLabel = `${rowMonth}/${rowYear}`;
@@ -853,7 +950,7 @@
                         let displayLabel = rowYear < maxYearStr ? `ปี ${rowYear}` : `${rowMonth}/${rowYear}`;
                         if (!orderTrendDict[bucketKey]) orderTrendDict[bucketKey] = { label: displayLabel, lines: {} };
                         orderTrendDict[bucketKey].lines[lineVal] = (orderTrendDict[bucketKey].lines[lineVal] || 0) + qtyOrderTons;
-                    } else { // daily
+                    } else { 
                         let bucketKey = normalizedDate; let displayLabel = `${rowDay}/${rowMonth}/${rowYear}`;
                         if (!orderTrendDict[bucketKey]) orderTrendDict[bucketKey] = { label: displayLabel, lines: {} };
                         orderTrendDict[bucketKey].lines[lineVal] = (orderTrendDict[bucketKey].lines[lineVal] || 0) + qtyOrderTons;
@@ -867,6 +964,10 @@
                         macBatchData[macVal].uniqueBatches.add(batchNo);
                         macBatchData[macVal].totalQtyOrder += qtyOrder;
                     }
+                    
+                    if (!lineKpiData[lineVal]) lineKpiData[lineVal] = { batches: new Set(), macs: new Set() };
+                    lineKpiData[lineVal].batches.add(batchNo);
+                    lineKpiData[lineVal].macs.add(macVal);
                 }
                 
                 if (macVal && batchNo && normalizedDate) {
@@ -907,7 +1008,7 @@
                 if (mediaName && String(mediaName).trim() !== '') mediaDict[String(mediaName).trim()] = (mediaDict[String(mediaName).trim()] || 0) + mediaQty;
             });
 
-            // 5. อัปเดตการ์ดข้อมูล (รวมถึง 2 การ์ดใหม่: วันทำงาน & OT)
+            // 5. อัปเดตการ์ดข้อมูล (KPI หลัก)
             document.getElementById('kpiTotal').innerHTML = `${totalQty.toLocaleString()} <span class="text-sm font-normal text-slate-400">KG</span>`;
             document.getElementById('kpiRate').innerHTML = `${filteredData.length ? ((completedCount / filteredData.length)*100).toFixed(1) : 0}%`;
             document.getElementById('kpiWorkDays').innerHTML = `${totalWorkingDays} <span class="text-sm font-normal text-slate-400">วัน</span>`;
@@ -915,15 +1016,163 @@
             document.getElementById('kpiTime').innerHTML = `${batchesWithTime ? Math.round(totalTime / batchesWithTime) : 0} <span class="text-sm font-normal text-slate-400">นาที</span>`;
             document.getElementById('kpiIssues').innerHTML = `${issueCount} <span class="text-sm font-normal text-slate-400">ครั้ง</span>`;
 
-            // 6. อัปเดตกราฟ Machine Chart (เปลี่ยนเป็นระดับ Line)
+            // 💡 5.1 อัปเดตการ์ด OEE แยกตามไลน์ผลิต (ใหม่ล่าสุด!)
+            const lineKpisContainer = document.getElementById('lineKpisContainer');
+            if (Object.keys(lineKpiData).length === 0) {
+                lineKpisContainer.innerHTML = `<div class="text-sm text-slate-500 italic py-2">ไม่มีข้อมูลไลน์ผลิตตามช่วงเวลาที่เลือก</div>`;
+            } else {
+                let htmlOut = '';
+                const sortedLines = Object.keys(lineDict).sort((a,b) => lineDict[b] - lineDict[a]); // เรียงตามยอดผลิต
+                
+                sortedLines.forEach(line => {
+                    const actualQty = lineDict[line] || 0;
+                    const maxCap = lineCapDict[line] || 0;
+                    const daysWorked = lineDaysDict[line] ? lineDaysDict[line].size : 0;
+                    
+                    // 💡 สมการหาค่า A, P, Q (ย้อนกลับจากข้อมูลที่มี)
+                    const L_AvailMins = lineAvailMinsDict[line] || 0;
+                    const L_UsageTime = lineUsageTimeDict[line] || 0;
+                    
+                    // A = USAGE_TIME / เวลาพร้อมทำงาน (แคปไม่เกิน 1.0)
+                    let valA = L_AvailMins > 0 ? (L_UsageTime / L_AvailMins) : 0;
+                    if (valA > 1) valA = 1; 
+                    
+                    // ประสิทธิภาพดิบ = ผลิตจริง / เป้า Cap ใหญ่
+                    const efficiency = maxCap > 0 ? (actualQty / maxCap) : 0;
+                    
+                    // P = ถ้าทำ OEE แล้ว A*P*Q = Efficiency -> P = Efficiency / A
+                    let valP = valA > 0 ? (efficiency / valA) : 0; 
+                    
+                    // Q = 100% ชั่วคราวจนกว่าจะมีการกรอกข้อมูลของเสีย
+                    const valQ = 1.0; 
+                    
+                    const pctA = (valA * 100).toFixed(1);
+                    const pctP = (valP * 100).toFixed(1);
+                    const pctQ = (valQ * 100).toFixed(1);
+                    const pctOEE = (efficiency * 100).toFixed(1); // OEE สุทธิคือยอดผลิตชนเป้า
+                    
+                    let effColorClass = 'text-indigo-600 bg-indigo-50 border-indigo-200';
+                    let barColor = 'bg-indigo-500';
+                    if (efficiency >= 0.85) { effColorClass = 'text-emerald-600 bg-emerald-50 border-emerald-200'; barColor = 'bg-emerald-500'; }
+                    else if (efficiency < 0.60) { effColorClass = 'text-rose-600 bg-rose-50 border-rose-200'; barColor = 'bg-rose-500'; }
+
+                    htmlOut += `
+                        <div class="min-w-[300px] bg-white p-4 rounded-xl border shadow-sm shrink-0 snap-start relative overflow-hidden group hover:border-indigo-300 transition-colors">
+                            <div class="flex justify-between items-start mb-2">
+                                <h5 class="font-bold text-slate-800 text-base">${line}</h5>
+                                <div class="text-right">
+                                    <span class="text-[10px] text-slate-400 font-medium block leading-tight">OEE Score</span>
+                                    <span class="text-lg font-bold ${effColorClass.split(' ')[0]}">${pctOEE}%</span>
+                                </div>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-1.5 mb-3">
+                                <div class="${barColor} h-1.5 rounded-full" style="width: ${Math.min(pctOEE, 100)}%"></div>
+                            </div>
+                            
+                            <div class="grid grid-cols-3 gap-1 mb-3">
+                                <div class="bg-slate-50 py-1.5 px-2 rounded border border-slate-100 text-center">
+                                    <p class="text-[10px] text-slate-500 font-semibold" title="Availability (ความพร้อมเดินเครื่อง)">A</p>
+                                    <p class="font-bold text-slate-700 text-xs">${pctA}%</p>
+                                </div>
+                                <div class="bg-slate-50 py-1.5 px-2 rounded border border-slate-100 text-center">
+                                    <p class="text-[10px] text-slate-500 font-semibold" title="Performance (ประสิทธิภาพการเดินเครื่อง)">P</p>
+                                    <p class="font-bold text-slate-700 text-xs">${pctP}%</p>
+                                </div>
+                                <div class="bg-slate-50 py-1.5 px-2 rounded border border-slate-100 text-center relative group/tip cursor-help">
+                                    <p class="text-[10px] text-slate-500 font-semibold" title="Quality (คุณภาพ)">Q <span class="text-[8px] text-amber-500">*</span></p>
+                                    <p class="font-bold text-slate-700 text-xs">${pctQ}%</p>
+                                </div>
+                            </div>
+
+                            <div class="text-[10px] text-slate-500 flex justify-between border-t border-slate-100 pt-2 font-medium">
+                                <span title="วันทำงานจริง">⏱️ ${daysWorked} วัน</span>
+                                <span title="เป้ากำลังผลิตสูงสุด">🎯 ${(maxCap/1000).toLocaleString(undefined, {maximumFractionDigits:1})} ตัน</span>
+                                <span title="ยอดผลิตจริง">📦 ${(actualQty/1000).toLocaleString(undefined, {maximumFractionDigits:1})} ตัน</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                lineKpisContainer.innerHTML = htmlOut;
+            }
+
+            // 6. อัปเดตกราฟ Machine Chart (รองรับการแตกแท่ง Grouped Bar)
             if (machineChartInstance) {
+                window.currentLineMetrics = {}; 
                 const sortedLines = Object.keys(lineDict).sort((a,b) => lineDict[b] - lineDict[a]).slice(0, 7);
                 machineChartInstance.data.labels = sortedLines;
-                machineChartInstance.data.datasets[0].data = sortedLines.map(line => lineDict[line] || 0); 
-                machineChartInstance.data.datasets[1].data = sortedLines.map(line => lineCapDict[line] || 0);    
                 
-                window.currentLineDays = lineDaysDict;
-                window.currentLineOT = lineOTDict;
+                let datasets = [];
+                
+                if (compareMode === 'summary') {
+                    datasets.push({
+                        type: 'bar', label: 'ยอดผลิตจริง (Actual QTY)', 
+                        data: sortedLines.map(line => lineDict[line] || 0),
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)', hoverBackgroundColor: 'rgba(37, 99, 235, 1)', 
+                        borderRadius: 4, barThickness: 'flex', maxBarThickness: 40, order: 2
+                    });
+                    datasets.push({
+                        type: 'line', label: 'เป้ากำลังผลิตสูงสุด (Max Capacity)', 
+                        data: sortedLines.map(line => lineCapDict[line] || 0),
+                        borderColor: 'rgba(239, 68, 68, 1)', backgroundColor: 'rgba(239, 68, 68, 1)',
+                        borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, fill: false, borderDash: [5, 5], order: 1
+                    });
+                    
+                    sortedLines.forEach(line => {
+                        window.currentLineMetrics[line] = {
+                            summary: { days: lineDaysDict[line] ? lineDaysDict[line].size : 0, otMins: lineOTDict[line] || 0 }
+                        };
+                    });
+                    
+                } else {
+                    const mNames = {'01':'ม.ค.', '02':'ก.พ.', '03':'มี.ค.', '04':'เม.ย.', '05':'พ.ค.', '06':'มิ.ย.', '07':'ก.ค.', '08':'ส.ค.', '09':'ก.ย.', '10':'ต.ค.', '11':'พ.ย.', '12':'ธ.ค.'};
+                    const colorsList = [
+                        { bg: 'rgba(59, 130, 246, 0.8)', hover: 'rgba(37, 99, 235, 1)', border: 'rgba(37, 99, 235, 1)' }, 
+                        { bg: 'rgba(16, 185, 129, 0.8)', hover: 'rgba(5, 150, 105, 1)', border: 'rgba(5, 150, 105, 1)' }, 
+                        { bg: 'rgba(245, 158, 11, 0.8)', hover: 'rgba(217, 119, 6, 1)', border: 'rgba(217, 119, 6, 1)' },  
+                        { bg: 'rgba(139, 92, 246, 0.8)', hover: 'rgba(109, 40, 217, 1)', border: 'rgba(109, 40, 217, 1)' }, 
+                        { bg: 'rgba(236, 72, 153, 0.8)', hover: 'rgba(219, 39, 119, 1)', border: 'rgba(219, 39, 119, 1)' }  
+                    ];
+                    const capColorsList = ['rgba(239, 68, 68, 1)', 'rgba(249, 115, 22, 1)', 'rgba(225, 29, 72, 1)', 'rgba(190, 18, 60, 1)'];
+                    
+                    sortedLines.forEach(line => window.currentLineMetrics[line] = {});
+                    
+                    compareKeys.forEach((key, index) => {
+                        let displayLabel = key;
+                        if (compareMode === 'month') displayLabel = mNames[key] || key;
+                        else if (compareMode === 'year_month') {
+                            const [y, m] = key.split('-');
+                            displayLabel = `${mNames[m] || m} ${y}`;
+                        }
+                        
+                        const colorSet = colorsList[index % colorsList.length];
+                        const capColor = capColorsList[index % capColorsList.length];
+                        
+                        datasets.push({
+                            type: 'bar', label: `Actual (${displayLabel})`, 
+                            data: sortedLines.map(line => lineTimeSeriesData[line]?.[key]?.actual || 0),
+                            backgroundColor: colorSet.bg, hoverBackgroundColor: colorSet.hover, 
+                            borderRadius: 4, barThickness: 'flex', maxBarThickness: 30, order: 2
+                        });
+                        
+                        datasets.push({
+                            type: 'line', label: `Max Cap (${displayLabel})`, 
+                            data: sortedLines.map(line => lineTimeSeriesData[line]?.[key]?.cap || 0),
+                            borderColor: capColor, backgroundColor: capColor,
+                            borderWidth: 2, pointRadius: 3, pointHoverRadius: 5, fill: false, borderDash: [4, 4], order: 1,
+                            hidden: false 
+                        });
+                        
+                        sortedLines.forEach(line => {
+                            const dataObj = lineTimeSeriesData[line]?.[key];
+                            window.currentLineMetrics[line][displayLabel] = {
+                                days: dataObj ? dataObj.daysSet.size : 0,
+                                otMins: dataObj ? dataObj.otMins : 0
+                            };
+                        });
+                    });
+                }
+                
+                machineChartInstance.data.datasets = datasets;
                 machineChartInstance.update();
             }
 
@@ -1036,7 +1285,7 @@
                 macUtilContainer.innerHTML = utilHtml;
             }
 
-            // อัปเดตตาราง Status Breakdown (ที่กู้คืนมา)
+            // อัปเดตตาราง Status Breakdown
             const statusContainer = document.getElementById('statusBreakdownContainer');
             if (Object.keys(statusGroups).length === 0) { statusContainer.innerHTML = `<div class="text-center text-slate-500 py-8">ไม่พบรายการแบทช์ตามเงื่อนไขที่เลือก</div>`; } 
             else {
