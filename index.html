@@ -112,6 +112,19 @@
                 </div>
             </div>
             
+            <!-- 💡 เพิ่มใหม่: การ์ด Actual vs Capacity ตามไลน์ผลิต -->
+            <div class="mt-4 bg-blue-50/40 rounded-2xl p-4 border border-blue-100">
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="text-sm font-bold text-blue-800 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg> 
+                        ยอดผลิตเปรียบเทียบกำลังการผลิตแยกตามไลน์ (Actual vs Capacity)
+                    </h4>
+                </div>
+                <div id="actualVsCapCardsContainer" class="flex overflow-x-auto gap-3 pb-2 custom-scrollbar snap-x">
+                    <div class="text-sm text-slate-500 italic py-2">กำลังรอประมวลผลข้อมูล...</div>
+                </div>
+            </div>
+
             <!-- 💡 อัปเกรด: การ์ด OEE สรุปผลรายไลน์ผลิต -->
             <div class="mt-4 bg-slate-100/50 rounded-2xl p-4 border border-slate-200">
                 <div class="flex justify-between items-center mb-3">
@@ -1016,7 +1029,49 @@
             document.getElementById('kpiTime').innerHTML = `${batchesWithTime ? Math.round(totalTime / batchesWithTime) : 0} <span class="text-sm font-normal text-slate-400">นาที</span>`;
             document.getElementById('kpiIssues').innerHTML = `${issueCount} <span class="text-sm font-normal text-slate-400">ครั้ง</span>`;
 
-            // 💡 5.1 อัปเดตการ์ด OEE แยกตามไลน์ผลิต (ใหม่ล่าสุด!)
+            // 💡 5.1 อัปเดตการ์ด Actual vs Capacity แยกตามไลน์ (ใหม่)
+            const actualVsCapContainer = document.getElementById('actualVsCapCardsContainer');
+            if (Object.keys(lineDict).length === 0) {
+                actualVsCapContainer.innerHTML = `<div class="text-sm text-slate-500 italic py-2">ไม่มีข้อมูลตามช่วงเวลาที่เลือก</div>`;
+            } else {
+                let actHtml = '';
+                const sortedLines = Object.keys(lineDict).sort((a,b) => lineDict[b] - lineDict[a]);
+                
+                sortedLines.forEach(line => {
+                    const actualQty = lineDict[line] || 0;
+                    const maxCap = lineCapDict[line] || 0;
+                    const efficiency = maxCap > 0 ? ((actualQty / maxCap) * 100).toFixed(1) : 0;
+                    
+                    let barColor = 'bg-blue-500';
+                    let textColor = 'text-blue-700 bg-blue-100';
+                    if (efficiency > 100) { barColor = 'bg-rose-500'; textColor = 'text-rose-700 bg-rose-100'; }
+                    else if (efficiency >= 85) { barColor = 'bg-emerald-500'; textColor = 'text-emerald-700 bg-emerald-100'; }
+                    else if (efficiency < 60) { barColor = 'bg-amber-500'; textColor = 'text-amber-700 bg-amber-100'; }
+
+                    actHtml += `
+                        <div class="min-w-[260px] bg-white p-4 rounded-xl border border-blue-100 shadow-sm shrink-0 snap-start hover:border-blue-300 transition-colors">
+                            <div class="flex justify-between items-center mb-3">
+                                <h5 class="font-bold text-slate-800 text-base">${line}</h5>
+                                <span class="text-xs font-bold px-2 py-1 rounded-md ${textColor}">${efficiency}%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2 mb-3">
+                                <div class="${barColor} h-2 rounded-full" style="width: ${Math.min(efficiency, 100)}%"></div>
+                            </div>
+                            <div class="flex justify-between text-xs text-slate-600 mb-1.5">
+                                <span class="font-medium">ยอดผลิตจริง (Actual):</span>
+                                <span class="font-bold text-blue-700">${(actualQty/1000).toLocaleString(undefined, {maximumFractionDigits:2})} ตัน</span>
+                            </div>
+                            <div class="flex justify-between text-xs text-slate-600">
+                                <span class="font-medium">เป้าสูงสุด (Max Cap):</span>
+                                <span class="font-bold text-slate-700">${(maxCap/1000).toLocaleString(undefined, {maximumFractionDigits:2})} ตัน</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                actualVsCapContainer.innerHTML = actHtml;
+            }
+
+            // 💡 5.2 อัปเดตการ์ด OEE แยกตามไลน์ผลิต (ใหม่ล่าสุด!)
             const lineKpisContainer = document.getElementById('lineKpisContainer');
             if (Object.keys(lineKpiData).length === 0) {
                 lineKpisContainer.innerHTML = `<div class="text-sm text-slate-500 italic py-2">ไม่มีข้อมูลไลน์ผลิตตามช่วงเวลาที่เลือก</div>`;
@@ -1051,6 +1106,19 @@
                     const pctQ = (valQ * 100).toFixed(1);
                     const pctOEE = (efficiency * 100).toFixed(1); // OEE สุทธิคือยอดผลิตชนเป้า
                     
+                    // 💡 คำนวณ Batch Cap และ Max Cap ต่อวันกลับคืนมา
+                    let totalStdBatchCap = 0;
+                    let totalDailyMaxCap = 0;
+                    if (lineKpiData[line]) {
+                        lineKpiData[line].macs.forEach(mac => {
+                            totalStdBatchCap += getStdBatchCap(mac);
+                            totalDailyMaxCap += (MAC_CAPACITY[mac] || 0);
+                        });
+                    }
+                    const macCount = lineKpiData[line] ? lineKpiData[line].macs.size : 1;
+                    const avgBatchCap = macCount > 0 ? Math.round(totalStdBatchCap / macCount) : 0;
+                    const dailyMaxCap = totalDailyMaxCap;
+
                     let effColorClass = 'text-indigo-600 bg-indigo-50 border-indigo-200';
                     let barColor = 'bg-indigo-500';
                     if (efficiency >= 0.85) { effColorClass = 'text-emerald-600 bg-emerald-50 border-emerald-200'; barColor = 'bg-emerald-500'; }
@@ -1084,10 +1152,11 @@
                                 </div>
                             </div>
 
-                            <div class="text-[10px] text-slate-500 flex justify-between border-t border-slate-100 pt-2 font-medium">
-                                <span title="วันทำงานจริง">⏱️ ${daysWorked} วัน</span>
-                                <span title="เป้ากำลังผลิตสูงสุด">🎯 ${(maxCap/1000).toLocaleString(undefined, {maximumFractionDigits:1})} ตัน</span>
-                                <span title="ยอดผลิตจริง">📦 ${(actualQty/1000).toLocaleString(undefined, {maximumFractionDigits:1})} ตัน</span>
+                            <div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-100 text-[10px] text-slate-600">
+                                <div class="flex justify-between"><span>⏱️ วันทำงาน:</span> <span class="font-bold text-slate-800">${daysWorked} วัน</span></div>
+                                <div class="flex justify-between"><span title="เป้ากำลังผลิตสูงสุดต่อวัน">⚙️ Max/วัน:</span> <span class="font-bold text-slate-800">${(dailyMaxCap/1000).toLocaleString(undefined, {maximumFractionDigits:1})} ตัน</span></div>
+                                <div class="flex justify-between"><span>📦 Batch Cap:</span> <span class="font-bold text-slate-800">${avgBatchCap.toLocaleString()} KG</span></div>
+                                <div class="flex justify-between"><span title="ยอดผลิตจริงรวม">🎯 ยอดผลิต:</span> <span class="font-bold text-slate-800">${(actualQty/1000).toLocaleString(undefined, {maximumFractionDigits:1})} ตัน</span></div>
                             </div>
                         </div>
                     `;
