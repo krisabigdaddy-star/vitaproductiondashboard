@@ -154,7 +154,7 @@
                             <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg> 
                             อัตราการผลิตทะลุเป้ารายวัน (Push Beyond Max Cap %)
                         </h4>
-                        <span class="text-[10px] text-amber-600 font-medium hidden sm:inline">*สัดส่วนจำนวนวันที่ผลิตได้เกินเป้า Max Cap ต่อวันทำงานจริง</span>
+                        <span class="text-[10px] text-amber-600 font-medium hidden sm:inline">*สัดส่วนจำนวนวันที่ผลิตได้เกินเป้า Max Cap โดยไม่มี OT เทียบกับวันทำงานทั้งหมด</span>
                     </div>
                     <div id="pushMaxCapContainer" class="flex overflow-x-auto gap-3 pb-2 custom-scrollbar snap-x">
                         <div class="text-sm text-slate-500 italic py-2">กำลังรอประมวลผลข้อมูล...</div>
@@ -527,7 +527,7 @@
                                         lines.push(` 🎯 เป้าหมายของไลน์นี้: ${capVal.toLocaleString()} ${unit}`);
                                         lines.push(` ----------------------------------`);
                                         lines.push(` ⏱️ ทำงานจริง: ${days} วัน (OT: ${otHours} ชม.)`);
-                                        lines.push(` 📊 ประสิทธิภาพ (Efficiency): ${percent}%`);
+                                        lines.push(` 📊 สัดส่วนต่อเป้าหมาย: ${percent}%`);
                                         
                                         if (diff > 0) lines.push(` 📉 ส่วนต่าง: ต่ำกว่าเป้า ${diff.toLocaleString()} ${unit} (${diffPercent}%)`);
                                         else if (diff < 0) lines.push(` 📈 ส่วนต่าง: ทะลุเป้า ${Math.abs(diff).toLocaleString()} ${unit} (+${diffPercent}%)`);
@@ -1099,6 +1099,7 @@
             // 💡 ตัวแปรเก็บข้อมูลรายวันสำหรับคำนวณ Push Max Cap
             const lineDailyCapTracker = {};
             const lineDailyActualTracker = {};
+            const lineDailyOTTracker = {}; // 💡 เพิ่มตัวแปรสำหรับเช็ค OT รายวัน
 
             if (minDateStr !== "9999-99-99" && maxDateStr !== "0000-00-00") {
                 const minD = new Date(minDateStr);
@@ -1203,9 +1204,12 @@
                             if (dailyMins > 0) lineTimeSeriesData[line][timeKey].daysSet.add(dateStr);
                             lineTimeSeriesData[line][timeKey].otMins += dailyOT;
                             
-                            // 💡 สะสม Max Cap รายวัน
+                            // 💡 สะสม Max Cap และ OT รายวัน สำหรับตรวจสอบเป้าหมาย
                             if (!lineDailyCapTracker[line]) lineDailyCapTracker[line] = {};
                             lineDailyCapTracker[line][dateStr] = (lineDailyCapTracker[line][dateStr] || 0) + capacityAdded;
+
+                            if (!lineDailyOTTracker[line]) lineDailyOTTracker[line] = {};
+                            lineDailyOTTracker[line][dateStr] = dailyOT;
                         }
                     });
 
@@ -1572,22 +1576,32 @@
                 const sortedLines = Object.keys(lineDict).sort((a,b) => lineDict[b] - lineDict[a]);
                 
                 sortedLines.forEach(line => {
-                    let activeDaysCount = 0;
-                    let exceedDaysCount = 0;
+                    let nonOtActiveDays = 0;
+                    let nonOtExceedDays = 0;
+                    let otActiveDays = 0;
+                    let otExceedDays = 0;
 
                     if (lineActiveDays[line]) {
                         lineActiveDays[line].forEach(dateStr => {
-                            activeDaysCount++;
                             const dailyCap = (lineDailyCapTracker[line] && lineDailyCapTracker[line][dateStr]) ? lineDailyCapTracker[line][dateStr] : 0;
                             const dailyActual = (lineDailyActualTracker[line] && lineDailyActualTracker[line][dateStr]) ? lineDailyActualTracker[line][dateStr] : 0;
+                            const dailyOT = (lineDailyOTTracker[line] && lineDailyOTTracker[line][dateStr]) ? lineDailyOTTracker[line][dateStr] : 0;
 
-                            if (dailyCap > 0 && dailyActual > dailyCap) {
-                                exceedDaysCount++;
+                            if (dailyCap > 0) {
+                                if (dailyOT === 0) {
+                                    nonOtActiveDays++;
+                                    if (dailyActual > dailyCap) nonOtExceedDays++;
+                                } else {
+                                    otActiveDays++;
+                                    if (dailyActual > dailyCap) otExceedDays++;
+                                }
                             }
                         });
                     }
                     
-                    const exceedPct = activeDaysCount > 0 ? ((exceedDaysCount / activeDaysCount) * 100).toFixed(1) : 0;
+                    const totalActiveDays = nonOtActiveDays + otActiveDays;
+                    // 💡 เปอร์เซ็นต์หลัก (ตัวชี้วัด) ใช้วันที่ทะลุเป้าแบบไม่มี OT หารด้วย จำนวนวันทำงานทั้งหมด
+                    const exceedPct = totalActiveDays > 0 ? ((nonOtExceedDays / totalActiveDays) * 100).toFixed(1) : 0;
                     
                     let textColor = 'text-slate-600 bg-slate-100';
                     let borderColor = 'border-amber-100 hover:border-amber-300';
@@ -1598,21 +1612,31 @@
                     else if (exceedPct > 0) { textColor = 'text-emerald-700 bg-emerald-100'; borderColor = 'border-emerald-200 hover:border-emerald-400'; icon = '📈'; }
 
                     pushHtml += `
-                        <div class="min-w-[240px] bg-white p-4 rounded-xl border ${borderColor} shadow-sm shrink-0 snap-start transition-colors">
-                            <div class="flex justify-between items-center mb-3">
+                        <div class="min-w-[260px] bg-white p-4 rounded-xl border ${borderColor} shadow-sm shrink-0 snap-start transition-colors">
+                            <div class="flex justify-between items-center mb-1">
                                 <h5 class="font-bold text-slate-800 text-base">${line}</h5>
-                                <span class="text-xs font-bold px-2 py-1 rounded-md ${textColor}">${icon} ${exceedPct}%</span>
+                                <div class="text-right">
+                                    <span class="text-xs font-bold px-2 py-1 rounded-md ${textColor}">${icon} ${exceedPct}%</span>
+                                </div>
                             </div>
+                            <div class="text-[9px] text-slate-400 mb-3 text-right">*(วันปกติที่ทะลุเป้า ÷ วันทำงานรวม)*</div>
                             <div class="w-full bg-slate-100 rounded-full h-1.5 mb-3">
                                 <div class="${textColor.split(' ')[1]} h-1.5 rounded-full" style="width: ${Math.min(exceedPct, 100)}%"></div>
                             </div>
-                            <div class="flex justify-between text-xs text-slate-600 mb-1.5">
-                                <span class="font-medium">จำนวนวันที่ทะลุเป้า:</span>
-                                <span class="font-bold text-emerald-600">${exceedDaysCount} วัน</span>
-                            </div>
-                            <div class="flex justify-between text-xs text-slate-600">
-                                <span class="font-medium">วันเปิดผลิตทั้งหมด:</span>
-                                <span class="font-bold text-slate-700">${activeDaysCount} วัน</span>
+                            
+                            <div class="grid grid-cols-1 gap-1 text-[10px] text-slate-600">
+                                <div class="flex justify-between p-1.5 bg-slate-50 rounded border border-slate-100">
+                                    <span class="font-medium text-slate-500">วันปกติ (ไม่มี OT):</span>
+                                    <span>ทะลุเป้า <span class="font-bold text-emerald-600">${nonOtExceedDays}</span> / ${nonOtActiveDays} วัน</span>
+                                </div>
+                                <div class="flex justify-between p-1.5 bg-slate-50 rounded border border-slate-100">
+                                    <span class="font-medium text-slate-500">วันทำล่วงเวลา (มี OT):</span>
+                                    <span>ทะลุเป้า <span class="font-bold text-blue-600">${otExceedDays}</span> / ${otActiveDays} วัน</span>
+                                </div>
+                                <div class="flex justify-between p-1.5 mt-1 border-t border-slate-100 font-medium">
+                                    <span class="text-slate-600">รวมวันทำงานทั้งหมด:</span>
+                                    <span class="text-slate-800">${totalActiveDays} วัน</span>
+                                </div>
                             </div>
                         </div>
                     `;
