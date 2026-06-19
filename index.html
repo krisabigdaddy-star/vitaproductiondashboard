@@ -8,9 +8,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
@@ -19,14 +16,26 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .choices { margin-bottom: 0 !important; }
-        .choices[data-type*="select-multiple"] .choices__inner { background-color: #f8fafc !important; border: 1px solid #e2e8f0 !important; border-radius: 0.5rem !important; padding: 4px 6px !important; min-height: 40px !important; display: flex; flex-wrap: wrap; align-items: center; }
-        .choices__list--multiple .choices__item { background-color: #3b82f6 !important; border: 1px solid #2563eb !important; border-radius: 0.25rem !important; padding: 2px 6px !important; font-family: 'Sarabun', sans-serif; font-size: 0.75rem !important; margin-right: 4px !important; margin-bottom: 0 !important; }
-        .choices__input { background-color: transparent !important; margin-bottom: 0 !important; color: #334155 !important; font-family: 'Sarabun', sans-serif; }
-        .choices__list--dropdown { border-radius: 0.5rem !important; border-color: #e2e8f0 !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important; z-index: 50 !important; }
-        .choices__list--dropdown .choices__item { font-size: 0.875rem !important; padding: 8px 12px !important; }
-        .choices__list--dropdown .choices__item--selectable.is-highlighted { background-color: #eff6ff !important; color: #0f172a !important; }
-        .choices[data-type*="select-multiple"] .choices__button { border-left: 1px solid rgba(255,255,255,0.3); margin-left: 6px; }
+        
+        /* Checkbox filter dropdown styles */
+        .filter-dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 4px;
+            width: 100%;
+            min-width: 200px;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            overflow: hidden;
+        }
+        .filter-dropdown-content.show {
+            display: block;
+        }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen p-4 md:p-6 lg:p-8">
@@ -58,22 +67,104 @@
                     ตัวกรองข้อมูล (Slicers)
                 </h3>
                 <div class="flex items-center gap-4">
-                    <button onclick="event.stopPropagation(); resetFilters()" class="text-xs text-slate-500 hover:text-blue-600 font-medium transition-colors">ล้างค่า (Clear All)</button>
+                    <button onclick="event.stopPropagation(); resetFilters()" class="text-xs text-slate-500 hover:text-blue-600 font-medium transition-colors flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        ล้างค่า (Clear)
+                    </button>
                     <svg id="icon-filters" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
             </div>
             
             <div id="wrapper-filters">
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                    <div class="flex flex-col"><label class="text-xs text-slate-500 mb-1 font-medium">ปี (Year)</label><select id="filterYear" multiple></select></div>
-                    <div class="flex flex-col"><label class="text-xs text-slate-500 mb-1 font-medium">เดือน (Month)</label><select id="filterMonth" multiple></select></div>
-                    <div class="flex flex-col"><label class="text-xs text-slate-500 mb-1 font-medium">วัน (Day)</label><select id="filterDay" multiple></select></div>
-                    <div class="flex flex-col"><label class="text-xs text-slate-500 mb-1 font-medium text-blue-600">สถานะแผน (PLAN_STATUS)</label><select id="filterStatus" multiple></select></div>
-                    <div class="flex flex-col"><label class="text-xs text-slate-500 mb-1 font-medium">ไลน์ผลิต (LINE)</label><select id="filterLine" multiple></select></div>
-                    <div class="flex flex-col"><label class="text-xs text-slate-500 mb-1 font-medium">เครื่องจักร (MAC)</label><select id="filterMac" multiple></select></div>
-                    <div class="flex flex-col"><label class="text-xs text-slate-500 mb-1 font-medium">กลุ่มสินค้า (GROUP)</label><select id="filterGroup" multiple></select></div>
-                    <div class="flex flex-col"><label class="text-xs text-slate-500 mb-1 font-medium">คลาส (CLASS)</label><select id="filterClass" multiple></select></div>
-                    <div class="flex flex-col"><label class="text-xs text-slate-500 mb-1 font-medium">รหัสสินค้า (ITEM)</label><input type="text" id="filterItem" placeholder="เช่น P-001..." class="bg-slate-50 border border-slate-200 text-sm rounded-lg p-2 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-700 w-full" style="min-height: 40px;"></div>
+                    
+                    <!-- 💡 เปลี่ยน Filter เป็นโครงสร้าง Dropdown Checkbox -->
+                    <div class="flex flex-col relative" id="filter-wrapper-Year">
+                        <label class="text-xs text-slate-500 mb-1 font-medium">ปี (Year)</label>
+                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-700 cursor-pointer flex justify-between items-center min-h-[40px] shadow-sm hover:border-blue-400 transition-colors" onclick="toggleFilterDropdown('filterYear')">
+                            <span id="lbl-filterYear" class="truncate">ทั้งหมด</span>
+                            <svg class="w-4 h-4 text-slate-400 pointer-events-none shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div id="dd-filterYear" class="filter-dropdown-content"></div>
+                    </div>
+
+                    <div class="flex flex-col relative" id="filter-wrapper-Month">
+                        <label class="text-xs text-slate-500 mb-1 font-medium">เดือน (Month)</label>
+                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-700 cursor-pointer flex justify-between items-center min-h-[40px] shadow-sm hover:border-blue-400 transition-colors" onclick="toggleFilterDropdown('filterMonth')">
+                            <span id="lbl-filterMonth" class="truncate">ทั้งหมด</span>
+                            <svg class="w-4 h-4 text-slate-400 pointer-events-none shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div id="dd-filterMonth" class="filter-dropdown-content"></div>
+                    </div>
+
+                    <div class="flex flex-col relative" id="filter-wrapper-Day">
+                        <label class="text-xs text-slate-500 mb-1 font-medium">วัน (Day)</label>
+                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-700 cursor-pointer flex justify-between items-center min-h-[40px] shadow-sm hover:border-blue-400 transition-colors" onclick="toggleFilterDropdown('filterDay')">
+                            <span id="lbl-filterDay" class="truncate">ทั้งหมด</span>
+                            <svg class="w-4 h-4 text-slate-400 pointer-events-none shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div id="dd-filterDay" class="filter-dropdown-content"></div>
+                    </div>
+
+                    <!-- 💡 เพิ่ม Filter: ประเภท Batch (3 ตัวแรก) -->
+                    <div class="flex flex-col relative" id="filter-wrapper-BatchPrefix">
+                        <label class="text-xs text-slate-500 mb-1 font-medium text-purple-600">รหัส Batch (3 ตัวแรก)</label>
+                        <div class="bg-purple-50 border border-purple-200 rounded-lg p-2 text-sm text-slate-700 cursor-pointer flex justify-between items-center min-h-[40px] shadow-sm hover:border-purple-400 transition-colors" onclick="toggleFilterDropdown('filterBatchPrefix')">
+                            <span id="lbl-filterBatchPrefix" class="truncate">ทั้งหมด</span>
+                            <svg class="w-4 h-4 text-purple-400 pointer-events-none shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div id="dd-filterBatchPrefix" class="filter-dropdown-content border-purple-200"></div>
+                    </div>
+
+                    <div class="flex flex-col relative" id="filter-wrapper-Status">
+                        <label class="text-xs text-slate-500 mb-1 font-medium text-blue-600">สถานะแผน (STATUS)</label>
+                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-700 cursor-pointer flex justify-between items-center min-h-[40px] shadow-sm hover:border-blue-400 transition-colors" onclick="toggleFilterDropdown('filterStatus')">
+                            <span id="lbl-filterStatus" class="truncate">ทั้งหมด</span>
+                            <svg class="w-4 h-4 text-slate-400 pointer-events-none shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div id="dd-filterStatus" class="filter-dropdown-content"></div>
+                    </div>
+
+                    <div class="flex flex-col relative" id="filter-wrapper-Line">
+                        <label class="text-xs text-slate-500 mb-1 font-medium">ไลน์ผลิต (LINE)</label>
+                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-700 cursor-pointer flex justify-between items-center min-h-[40px] shadow-sm hover:border-blue-400 transition-colors" onclick="toggleFilterDropdown('filterLine')">
+                            <span id="lbl-filterLine" class="truncate">ทั้งหมด</span>
+                            <svg class="w-4 h-4 text-slate-400 pointer-events-none shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div id="dd-filterLine" class="filter-dropdown-content"></div>
+                    </div>
+
+                    <div class="flex flex-col relative" id="filter-wrapper-Mac">
+                        <label class="text-xs text-slate-500 mb-1 font-medium">เครื่องจักร (MAC)</label>
+                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-700 cursor-pointer flex justify-between items-center min-h-[40px] shadow-sm hover:border-blue-400 transition-colors" onclick="toggleFilterDropdown('filterMac')">
+                            <span id="lbl-filterMac" class="truncate">ทั้งหมด</span>
+                            <svg class="w-4 h-4 text-slate-400 pointer-events-none shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div id="dd-filterMac" class="filter-dropdown-content"></div>
+                    </div>
+
+                    <div class="flex flex-col relative" id="filter-wrapper-Group">
+                        <label class="text-xs text-slate-500 mb-1 font-medium">กลุ่มสินค้า (GROUP)</label>
+                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-700 cursor-pointer flex justify-between items-center min-h-[40px] shadow-sm hover:border-blue-400 transition-colors" onclick="toggleFilterDropdown('filterGroup')">
+                            <span id="lbl-filterGroup" class="truncate">ทั้งหมด</span>
+                            <svg class="w-4 h-4 text-slate-400 pointer-events-none shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div id="dd-filterGroup" class="filter-dropdown-content"></div>
+                    </div>
+
+                    <div class="flex flex-col relative" id="filter-wrapper-Class">
+                        <label class="text-xs text-slate-500 mb-1 font-medium">คลาส (CLASS)</label>
+                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-700 cursor-pointer flex justify-between items-center min-h-[40px] shadow-sm hover:border-blue-400 transition-colors" onclick="toggleFilterDropdown('filterClass')">
+                            <span id="lbl-filterClass" class="truncate">ทั้งหมด</span>
+                            <svg class="w-4 h-4 text-slate-400 pointer-events-none shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div id="dd-filterClass" class="filter-dropdown-content"></div>
+                    </div>
+
+                    <div class="flex flex-col">
+                        <label class="text-xs text-slate-500 mb-1 font-medium">รหัสสินค้า (ITEM)</label>
+                        <input type="text" id="filterItem" placeholder="เช่น P-001..." class="bg-slate-50 border border-slate-200 text-sm rounded-lg p-2 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-700 w-full" style="min-height: 40px;" onkeyup="updateDashboard()">
+                    </div>
                 </div>
             </div>
         </div>
@@ -737,7 +828,7 @@
             }
 
             const boardData = {};
-            const processedUniqueJobs = new Set(); // 💡 ป้องกันโชว์การ์ดซ้ำสำหรับ Batch เดียวกัน
+            const processedUniqueJobs = new Set(); 
             
             dailyData.forEach(row => {
                 let rawMac = getColValue(row, 'MAC');
@@ -753,7 +844,7 @@
                 const jobKey = `${lineVal}_${macVal}_${sortDate}_${orderNo}`;
                 
                 if (orderNo !== '-' && processedUniqueJobs.has(jobKey)) {
-                    return; // ข้ามถ้ารายการนี้บันทึกการ์ดลง Kanban ไปแล้ว
+                    return; 
                 }
                 if (orderNo !== '-') {
                     processedUniqueJobs.add(jobKey);
@@ -835,7 +926,6 @@
                         let pctCap = dailyMaxCap > 0 ? Math.round((totalQtyToday / dailyMaxCap) * 100) : 0;
                         let capColor = pctCap > 100 ? 'bg-rose-500' : 'bg-blue-500';
                         
-                        // 💡 ตรวจสอบหน่วย สำหรับบรรทัดแสดงผล
                         const isTablet = line === 'TABLET';
                         const unitDisp = isTablet ? 'เม็ด' : 'KG';
 
@@ -891,35 +981,120 @@
         }
 
         // ========================================================
-        // ระบบ Slicer
+        // ระบบ Custom Checkbox Dropdown Slicers 💡
         // ========================================================
-        let filterInstances = {};
+        window.filterState = {
+            filterYear: [], filterMonth: [], filterDay: [], filterBatchPrefix: [],
+            filterStatus: [], filterLine: [], filterMac: [], filterGroup: [], filterClass: []
+        };
+        window.filterMaps = {}; 
 
-        function initFilters() {
-            // 💡 นำ filterPlantStatus ออก
-            const filterIds = ['filterYear', 'filterMonth', 'filterDay', 'filterStatus', 'filterLine', 'filterMac', 'filterClass', 'filterGroup'];
+        function toggleFilterDropdown(id) {
+            document.querySelectorAll('.filter-dropdown-content').forEach(el => {
+                if (el.id !== 'dd-' + id) el.classList.remove('show');
+            });
+            const dd = document.getElementById('dd-' + id);
+            dd.classList.toggle('show');
+        }
+
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('[id^="filter-wrapper-"]')) {
+                document.querySelectorAll('.filter-dropdown-content').forEach(el => el.classList.remove('show'));
+            }
+        });
+
+        function renderCheckboxes(id, set, map = null) {
+            const container = document.getElementById('dd-' + id);
+            if (!container) return;
             
-            filterIds.forEach(id => {
-                const el = document.getElementById(id);
-                filterInstances[id] = new Choices(el, {
-                    removeItemButton: true,
-                    searchPlaceholderValue: 'พิมพ์ค้นหา...',
-                    itemSelectText: '',
-                    noResultsText: 'ไม่พบข้อมูลที่ค้นหา',
-                    noChoicesText: 'ไม่มีข้อมูล',
-                    placeholder: true,
-                    placeholderValue: 'ทั้งหมด'
-                });
+            const currentSelected = window.filterState[id] || [];
+            
+            let html = `
+                <div class="p-2 border-b border-slate-100 bg-slate-50 sticky top-0 z-10">
+                    <input type="text" placeholder="ค้นหา..." class="w-full text-xs p-1.5 border border-slate-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" onkeyup="searchCb('${id}', this.value)">
+                </div>
+                <div class="max-h-48 overflow-y-auto custom-scrollbar p-1" id="list-${id}">
+            `;
 
-                el.addEventListener('change', () => { updateDashboard(); });
+            Array.from(set).sort().forEach(val => {
+                let displayVal = val;
+                if (map && map[val]) displayVal = `${val} - ${map[val]}`;
+                const checked = currentSelected.includes(val) ? 'checked' : '';
+                html += `
+                    <label class="flex items-center p-2 hover:bg-blue-50 rounded cursor-pointer cb-label-${id} transition-colors">
+                        <input type="checkbox" value="${val}" class="mr-2 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer" onchange="updateCbState('${id}')" ${checked}>
+                        <span class="text-sm text-slate-700 truncate" title="${displayVal}">${displayVal}</span>
+                    </label>
+                `;
             });
             
-            document.getElementById('filterItem').addEventListener('keyup', updateDashboard);
+            const emptyChecked = currentSelected.includes('empty') ? 'checked' : '';
+            html += `
+                    <label class="flex items-center p-2 hover:bg-blue-50 rounded cursor-pointer cb-label-${id} transition-colors border-t border-slate-100 mt-1">
+                        <input type="checkbox" value="empty" class="mr-2 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer" onchange="updateCbState('${id}')" ${emptyChecked}>
+                        <span class="text-sm text-slate-500 italic">ค่าว่าง (Blank)</span>
+                    </label>
+                </div>
+            `;
+            container.innerHTML = html;
+            updateCbLabel(id, map);
+        }
+
+        function searchCb(id, text) {
+            const search = text.toLowerCase();
+            const labels = document.querySelectorAll(`.cb-label-${id}`);
+            labels.forEach(label => {
+                const valText = label.querySelector('span').innerText.toLowerCase();
+                if (valText.includes(search)) {
+                    label.style.display = 'flex';
+                } else {
+                    label.style.display = 'none';
+                }
+            });
+        }
+
+        function updateCbState(id) {
+            const container = document.getElementById('dd-' + id);
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+            const selected = [];
+            checkboxes.forEach(cb => {
+                if (cb.checked) selected.push(cb.value);
+            });
+            window.filterState[id] = selected;
+            updateCbLabel(id, window.filterMaps[id]);
+            updateDashboard();
+        }
+
+        function updateCbLabel(id, map) {
+            const labelEl = document.getElementById('lbl-' + id);
+            if (!labelEl) return;
+            const selected = window.filterState[id];
+            
+            if (!selected || selected.length === 0) {
+                labelEl.innerText = 'ทั้งหมด';
+                labelEl.classList.remove('text-blue-700', 'text-purple-700', 'font-bold');
+                labelEl.classList.add('text-slate-700');
+            } else if (selected.length === 1) {
+                let val = selected[0];
+                if (val === 'empty') val = 'ค่าว่าง';
+                else if (map && map[val]) val = `${val} - ${map[val]}`;
+                
+                labelEl.innerText = val;
+                labelEl.classList.remove('text-slate-700');
+                if (id === 'filterBatchPrefix') labelEl.classList.add('text-purple-700', 'font-bold');
+                else labelEl.classList.add('text-blue-700', 'font-bold');
+            } else {
+                labelEl.innerText = `เลือก ${selected.length} รายการ`;
+                labelEl.classList.remove('text-slate-700');
+                if (id === 'filterBatchPrefix') labelEl.classList.add('text-purple-700', 'font-bold');
+                else labelEl.classList.add('text-blue-700', 'font-bold');
+            }
         }
 
         function populateDropdowns(data) {
             const years = new Set(), months = new Set(), days = new Set(), lines = new Set();
             const macs = new Set(), classes = new Set(), groups = new Set(), statuses = new Set(); 
+            const batchPrefixes = new Set();
 
             data.forEach(row => {
                 const dateVal = getColValue(row, 'PRODUCTION_DATE') != null ? getColValue(row, 'PRODUCTION_DATE') : '';
@@ -940,43 +1115,41 @@
 
                 const statusVal = getColValue(row, 'PLAN_STATUS') != null ? String(getColValue(row, 'PLAN_STATUS')).trim() : '';
                 if (statusVal) statuses.add(statusVal);
+
+                const batchNo = getColValue(row, 'ชื่อเรื่อง') || getColValue(row, 'Title') || getColValue(row, 'Batch No') || getColValue(row, 'ORDER_NO') || '';
+                if (batchNo && String(batchNo).trim() !== '') {
+                    const prefix = String(batchNo).trim().substring(0, 3).toUpperCase();
+                    if (prefix) batchPrefixes.add(prefix);
+                }
             });
 
-            const fillSelect = (selectId, set, monthMap = null) => {
-                const instance = filterInstances[selectId];
-                if (!instance) return;
-
-                const currentValues = instance.getValue(true) || [];
-                instance.clearStore(); 
-                
-                let choices = [];
-                Array.from(set).sort().forEach(val => {
-                    let displayVal = val;
-                    if (monthMap && monthMap[val]) displayVal = `${val} - ${monthMap[val]}`;
-                    choices.push({ value: val, label: displayVal, selected: currentValues.includes(val) });
-                });
-                
-                choices.push({ value: 'empty', label: 'ค่าว่าง (Blank)', selected: currentValues.includes('empty') });
-                instance.setChoices(choices, 'value', 'label', true);
-            };
-
             const monthNames = { '01': 'มกราคม', '02': 'กุมภาพันธ์', '03': 'มีนาคม', '04': 'เมษายน', '05': 'พฤษภาคม', '06': 'มิถุนายน', '07': 'กรกฎาคม', '08': 'สิงหาคม', '09': 'กันยายน', '10': 'ตุลาคม', '11': 'พฤศจิกายน', '12': 'ธันวาคม' };
+            window.filterMaps['filterMonth'] = monthNames;
 
-            fillSelect('filterYear', years); fillSelect('filterMonth', months, monthNames); fillSelect('filterDay', days); fillSelect('filterLine', lines); fillSelect('filterMac', macs); fillSelect('filterClass', classes); fillSelect('filterGroup', groups); fillSelect('filterStatus', statuses); 
+            renderCheckboxes('filterYear', years);
+            renderCheckboxes('filterMonth', months, monthNames);
+            renderCheckboxes('filterDay', days);
+            renderCheckboxes('filterBatchPrefix', batchPrefixes);
+            renderCheckboxes('filterStatus', statuses);
+            renderCheckboxes('filterLine', lines);
+            renderCheckboxes('filterMac', macs);
+            renderCheckboxes('filterGroup', groups);
+            renderCheckboxes('filterClass', classes);
         }
 
         // ========================================================
         // ฟังก์ชันอัปเดตกระดานหลัก
         // ========================================================
         function updateDashboard() {
-            const fYearArr = filterInstances['filterYear'] ? (filterInstances['filterYear'].getValue(true) || []) : [];
-            const fMonthArr = filterInstances['filterMonth'] ? (filterInstances['filterMonth'].getValue(true) || []) : [];
-            const fDayArr = filterInstances['filterDay'] ? (filterInstances['filterDay'].getValue(true) || []) : [];
-            const fLineArr = filterInstances['filterLine'] ? (filterInstances['filterLine'].getValue(true) || []) : [];
-            const fMacArr = filterInstances['filterMac'] ? (filterInstances['filterMac'].getValue(true) || []) : [];
-            const fClassArr = filterInstances['filterClass'] ? (filterInstances['filterClass'].getValue(true) || []) : [];
-            const fGroupArr = filterInstances['filterGroup'] ? (filterInstances['filterGroup'].getValue(true) || []) : [];
-            const fStatusArr = filterInstances['filterStatus'] ? (filterInstances['filterStatus'].getValue(true) || []) : []; 
+            const fYearArr = window.filterState['filterYear'] || [];
+            const fMonthArr = window.filterState['filterMonth'] || [];
+            const fDayArr = window.filterState['filterDay'] || [];
+            const fBatchPrefixArr = window.filterState['filterBatchPrefix'] || [];
+            const fLineArr = window.filterState['filterLine'] || [];
+            const fMacArr = window.filterState['filterMac'] || [];
+            const fClassArr = window.filterState['filterClass'] || [];
+            const fGroupArr = window.filterState['filterGroup'] || [];
+            const fStatusArr = window.filterState['filterStatus'] || []; 
             
             const fItem = document.getElementById('filterItem').value.trim().toLowerCase();
 
@@ -1018,6 +1191,9 @@
                 const itemVal = rawItemCode != null ? String(rawItemCode) : '';
                 const groupVal = getColValue(row, 'PRODUCT_GROUP') != null ? String(getColValue(row, 'PRODUCT_GROUP')).trim() : '';
                 const statusVal = getColValue(row, 'PLAN_STATUS') != null ? String(getColValue(row, 'PLAN_STATUS')).trim() : ''; 
+                
+                const rawBatchNo = getColValue(row, 'ชื่อเรื่อง') || getColValue(row, 'Title') || getColValue(row, 'Batch No') || getColValue(row, 'ORDER_NO') || '';
+                const rowBatchPrefix = rawBatchNo ? String(rawBatchNo).trim().substring(0, 3).toUpperCase() : '';
 
                 const { y: rowYear, m: rowMonth, d: rowDay } = extractDateParts(dateVal);
 
@@ -1031,6 +1207,7 @@
                 if (!checkMatch(fYearArr, rowYear)) match = false;
                 if (!checkMatch(fMonthArr, rowMonth)) match = false;
                 if (!checkMatch(fDayArr, rowDay)) match = false;
+                if (!checkMatch(fBatchPrefixArr, rowBatchPrefix)) match = false;
                 if (!checkMatch(fLineArr, lineVal)) match = false; 
                 if (!checkMatch(fMacArr, macVal)) match = false;
                 if (!checkMatch(fClassArr, classVal)) match = false;
@@ -1085,7 +1262,6 @@
             const macAvailableMinsDict = {}; 
             const lineDict = {};      
             const lineCapDict = {};   
-            // 💡 เพิ่มตัวแปรเก็บ Cap ที่มาจากฐานปกติ และ Cap ที่มาจาก OT
             const lineBaseCapDict = {};
             const lineOTCapDict = {};
 
@@ -1096,10 +1272,9 @@
             const lineAvailMinsDict = {}; 
             const lineTimeSeriesData = {};
             
-            // 💡 ตัวแปรเก็บข้อมูลรายวันสำหรับคำนวณ Push Max Cap
             const lineDailyCapTracker = {};
             const lineDailyActualTracker = {};
-            const lineDailyOTTracker = {}; // 💡 เพิ่มตัวแปรสำหรับเช็ค OT รายวัน
+            const lineDailyOTTracker = {}; 
 
             if (minDateStr !== "9999-99-99" && maxDateStr !== "0000-00-00") {
                 const minD = new Date(minDateStr);
@@ -1204,7 +1379,6 @@
                             if (dailyMins > 0) lineTimeSeriesData[line][timeKey].daysSet.add(dateStr);
                             lineTimeSeriesData[line][timeKey].otMins += dailyOT;
                             
-                            // 💡 สะสม Max Cap และ OT รายวัน สำหรับตรวจสอบเป้าหมาย
                             if (!lineDailyCapTracker[line]) lineDailyCapTracker[line] = {};
                             lineDailyCapTracker[line][dateStr] = (lineDailyCapTracker[line][dateStr] || 0) + capacityAdded;
 
@@ -1240,7 +1414,6 @@
             const lineYieldData = {};
             const lineKpiData = {};
 
-            // 💡 สร้าง Set สำหรับเช็ค Batch ป้องกันการรวม Quantity ซ้ำ
             const processedBatchesForQty = new Set();
 
             filteredData.forEach((row, index) => {
@@ -1269,7 +1442,6 @@
                     qtyOrder = Number(String(rawQtyOrder).replace(/,/g, '').trim()) || 0;
                 }
 
-                // 💡 ป้องกันการบวก Quantity ซ้ำ หากเป็น Batch เดียวกันใน Line เดียวกัน
                 const batchKeyForQty = batchNo ? `${lineVal}_${macVal}_${batchNo}` : `ROW_${index}`;
                 
                 if (!processedBatchesForQty.has(batchKeyForQty)) {
@@ -1285,7 +1457,6 @@
                         if (!lineTimeSeriesData[lineVal][timeKey]) lineTimeSeriesData[lineVal][timeKey] = { actual: 0, cap: 0, daysSet: new Set(), otMins: 0 };
                         lineTimeSeriesData[lineVal][timeKey].actual += qty;
                         
-                        // 💡 สะสม Actual QTY รายวัน
                         if (normalizedDate) {
                             if (!lineDailyActualTracker[lineVal]) lineDailyActualTracker[lineVal] = {};
                             lineDailyActualTracker[lineVal][normalizedDate] = (lineDailyActualTracker[lineVal][normalizedDate] || 0) + qty;
@@ -1305,7 +1476,6 @@
                     macDict[macVal] = (macDict[macVal] || 0) + qty;
                     
                     const isTablet = lineVal === 'TABLET';
-                    // 💡 ถ้าเป็น TABLET ไม่ต้องหารพัน เพราะจะแสดงเป็น (x 1,000 เม็ด) บน Tooltip แทน
                     const qtyOrderChartVal = isTablet ? qtyOrder : (qtyOrder / 1000); 
 
                     if (normalizedDate && qtyOrderChartVal > 0) {
@@ -1448,7 +1618,6 @@
                     else if (efficiency >= 85) { barColor = 'bg-emerald-500'; textColor = 'text-emerald-700 bg-emerald-100'; }
                     else if (efficiency < 60) { barColor = 'bg-amber-500'; textColor = 'text-amber-700 bg-amber-100'; }
 
-                    // 💡 เปลี่ยนหน่วยเป็น "เม็ด" ถ้าเป็น TABLET
                     const isTablet = line === 'TABLET';
                     const unitBig = isTablet ? 'เม็ด' : 'ตัน';
                     const divBig = isTablet ? 1 : 1000;
@@ -1490,7 +1659,7 @@
                 
                 sortedLines.forEach(line => {
                     const actualQty = lineDict[line] || 0;
-                    const maxCap = lineCapDict[line] || 0; // เป้าสูงสุดรวม OT
+                    const maxCap = lineCapDict[line] || 0; 
                     const daysWorked = lineDaysDict[line] ? lineDaysDict[line].size : 0;
                     
                     const otMins = lineOTDict[line] || 0;
@@ -1512,6 +1681,7 @@
                     const pctOEE = (efficiency * 100).toFixed(1); 
                     
                     const avgBatchCap = LINE_STD_BATCH_CAP[line] || 0;
+                    const dailyMaxCap = LINE_CAPACITY[line] || 0;
 
                     let effColorClass = 'text-indigo-600 bg-indigo-50 border-indigo-200';
                     let barColor = 'bg-indigo-500';
@@ -1600,7 +1770,6 @@
                     }
                     
                     const totalActiveDays = nonOtActiveDays + otActiveDays;
-                    // 💡 เปอร์เซ็นต์หลัก (ตัวชี้วัด) ใช้วันที่ทะลุเป้าแบบไม่มี OT หารด้วย จำนวนวันทำงานทั้งหมด
                     const exceedPct = totalActiveDays > 0 ? ((nonOtExceedDays / totalActiveDays) * 100).toFixed(1) : 0;
                     
                     let textColor = 'text-slate-600 bg-slate-100';
@@ -2044,14 +2213,6 @@
             }
         }
 
-        function resetFilters() {
-            Object.values(filterInstances).forEach(instance => {
-                instance.removeActiveItems(); 
-            });
-            document.getElementById('filterItem').value = '';
-            updateDashboard();
-        }
-
         function showAlert(title, message, type = 'info') {
             const modal = document.getElementById('alertModal');
             document.getElementById('alertTitle').innerText = title;
@@ -2146,7 +2307,12 @@
                     rawData = rawJson;
                     populateDropdowns(rawData); 
                     showAlert('อัปโหลดสำเร็จ!', `ประมวลผลข้อมูลเรียบร้อยแล้ว\nจำนวนรายการข้อมูลทั้งหมด: ${rawData.length.toLocaleString()} รายการ`, 'success');
-                    resetFilters(); 
+                    
+                    // Reset Checkbox States
+                    Object.keys(window.filterState).forEach(k => window.filterState[k] = []);
+                    document.getElementById('filterItem').value = '';
+                    
+                    updateDashboard(); 
                 } else {
                     showAlert('แจ้งเตือน', 'ไม่พบข้อมูลในไฟล์ Excel ที่อัปโหลด', 'info');
                 }
@@ -2155,7 +2321,16 @@
             e.target.value = ''; 
         });
 
-        initFilters();
+        // ล้างค่า Choices เดิมทิ้งทั้งหมดในฟังก์ชันนี้
+        function resetFilters() {
+            Object.keys(window.filterState).forEach(k => window.filterState[k] = []);
+            document.getElementById('filterItem').value = '';
+            
+            // Re-render clear state in UI
+            populateDropdowns(rawData);
+            updateDashboard();
+        }
+
         updateDashboard();
     </script>
 </body>
