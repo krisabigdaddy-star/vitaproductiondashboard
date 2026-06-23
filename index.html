@@ -375,6 +375,37 @@
             </div>
         </div>
 
+        <!-- 💡 Advanced Performance (ปรับเป็น 3 คอลัมน์สำหรับกราฟ Variance) 💡 -->
+        <div class="mt-6">
+            <div class="flex justify-between items-center px-2 mb-3 cursor-pointer hover:bg-slate-200/50 p-2 -mx-2 rounded-lg transition-colors" onclick="toggleSection('wrapper-advanced', 'icon-advanced')">
+                <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2"><span class="text-xl">🚀</span> ประสิทธิภาพเชิงลึก (Advanced Performance)</h3>
+                <svg id="icon-advanced" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+            <div id="wrapper-advanced" class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 relative z-10">
+                <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
+                    <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-slate-800">อัตราความเร็ว (Throughput)</h3></div>
+                    <div class="relative h-72 w-full"><canvas id="throughputChart"></canvas></div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
+                    <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-slate-800">ความแม่นยำผลผลิต (Yield %)</h3></div>
+                    <div class="relative h-72 w-full"><canvas id="yieldChart"></canvas></div>
+                </div>
+                <!-- 💡 เพิ่มกราฟ Variance ตามที่คุณกฤษฏ์ขอ -->
+                <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="font-bold text-slate-800">ปริมาณผลิตขาด/เกินเป้าออเดอร์</h3>
+                            <p class="text-[10px] text-slate-500 font-medium leading-tight mt-1">
+                                <span class="text-amber-600">เกิน 0 (บวก)</span> = Loss สูง/ควรปรับสูตร<br>
+                                <span class="text-rose-600">ต่ำกว่า 0 (ลบ)</span> = เสี่ยงส่งมอบไม่ครบ
+                            </p>
+                        </div>
+                    </div>
+                    <div class="relative h-72 w-full"><canvas id="varianceChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+
         <!-- Group Chart & Problems Table -->
         <div class="mt-6">
             <div class="flex justify-between items-center px-2 mb-3 cursor-pointer hover:bg-slate-200/50 p-2 -mx-2 rounded-lg transition-colors" onclick="toggleSection('wrapper-charts2', 'icon-charts2')">
@@ -382,7 +413,6 @@
                 <svg id="icon-charts2" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             </div>
             <div id="wrapper-charts2" class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 relative z-10">
-                <!-- Horizontal Bar: Product Groups -->
                 <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-slate-800">กลุ่มสินค้ายอดนิยม (Top Product Groups)</h3>
@@ -392,7 +422,6 @@
                     </div>
                 </div>
 
-                <!-- Table: Problem Logs -->
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-100 lg:col-span-2 flex flex-col">
                     <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-rose-50/30 rounded-t-2xl">
                         <h3 class="font-bold text-slate-800 flex items-center gap-2">
@@ -415,24 +444,6 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Advanced Performance -->
-        <div class="mt-6">
-            <div class="flex justify-between items-center px-2 mb-3 cursor-pointer hover:bg-slate-200/50 p-2 -mx-2 rounded-lg transition-colors" onclick="toggleSection('wrapper-advanced', 'icon-advanced')">
-                <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2"><span class="text-xl">🚀</span> ประสิทธิภาพเชิงลึก (Advanced Performance)</h3>
-                <svg id="icon-advanced" class="w-5 h-5 text-slate-400 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-            </div>
-            <div id="wrapper-advanced" class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 relative z-10">
-                <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
-                    <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-slate-800">อัตราความเร็ว (Throughput)</h3></div>
-                    <div class="relative h-72 w-full"><canvas id="throughputChart"></canvas></div>
-                </div>
-                <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
-                    <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-slate-800">ความแม่นยำผลผลิต (Yield %)</h3></div>
-                    <div class="relative h-72 w-full"><canvas id="yieldChart"></canvas></div>
                 </div>
             </div>
         </div>
@@ -528,6 +539,7 @@
         let batchCapChartInstance = null;
         let throughputChartInstance = null;
         let yieldChartInstance = null;
+        let varianceChartInstance = null; // 💡 ตัวแปรสำหรับกราฟใหม่
         let statusChartInstance = null;
         let groupChartInstance = null;
         let trendChartInstance = null;
@@ -724,6 +736,41 @@
             yieldChartInstance = new Chart(elYield.getContext('2d'), {
                 type: 'bar', data: { labels: [], datasets: [] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12, titleFont: { size: 14, family: "'Sarabun', sans-serif" }, bodyFont: { size: 13, family: "'Sarabun', sans-serif" }, callbacks: { label: function(context) { return ` Yield: ${context.parsed.y}%`; } } } }, scales: { y: { beginAtZero: true, grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false } }, x: { grid: { display: false, drawBorder: false } } } }
+            });
+        }
+
+        // 💡 กราฟใหม่: ปริมาณผลิตขาด/เกินเป้าออเดอร์ (Production Variance)
+        const elVariance = document.getElementById('varianceChart');
+        if (elVariance) {
+            varianceChartInstance = new Chart(elVariance.getContext('2d'), {
+                type: 'bar', data: { labels: [], datasets: [] },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { display: false }, 
+                        tooltip: { 
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12, 
+                            titleFont: { size: 14, family: "'Sarabun', sans-serif" }, 
+                            bodyFont: { size: 13, family: "'Sarabun', sans-serif" }, 
+                            callbacks: { 
+                                label: function(context) { 
+                                    const val = context.parsed.y;
+                                    const isTablet = context.chart.data.labels[context.dataIndex] === 'TABLET';
+                                    const unit = isTablet ? 'เม็ด' : 'KG';
+                                    if (val > 0) return ` ผลิตเกินเป้า: +${val.toLocaleString()} ${unit}`;
+                                    if (val < 0) return ` ผลิตขาดเป้า: ${val.toLocaleString()} ${unit}`;
+                                    return ` ผลิตพอดีเป้าออเดอร์`;
+                                } 
+                            } 
+                        } 
+                    }, 
+                    scales: { 
+                        y: { 
+                            grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false },
+                        }, 
+                        x: { grid: { display: false, drawBorder: false } } 
+                    } 
+                }
             });
         }
 
@@ -1454,8 +1501,8 @@
                 const dateVal = getColValue(row, 'PRODUCTION_DATE') || '';
                 const { y: rowYear, m: rowMonth, d: rowDay } = extractDateParts(dateVal);
                 const normalizedDate = (rowYear && rowMonth && rowDay) ? `${rowYear}-${rowMonth}-${rowDay}` : null;
-                const displayDate = (rowYear && rowMonth && rowDay) ? `${rowDay}/${rowMonth}/${rowYear}` : '-'; // 💡 สำหรับใช้แสดงผลวันที่ผลิต
-                const sortDateStr = normalizedDate || '9999-99-99'; // 💡 สำหรับใช้เรียงลำดับ
+                const displayDate = (rowYear && rowMonth && rowDay) ? `${rowDay}/${rowMonth}/${rowYear}` : '-'; 
+                const sortDateStr = normalizedDate || '9999-99-99'; 
 
                 let rawMac = getColValue(row, 'MAC');
                 const macVal = (rawMac != null && String(rawMac).trim() !== '') ? String(rawMac).trim() : 'ไม่ระบุ MAC';
@@ -1610,7 +1657,6 @@
                 const planStatus = getColValue(row, 'PLAN_STATUS') || 'ไม่ระบุสถานะ';
                 if (!statusGroups[planStatus]) statusGroups[planStatus] = [];
                 
-                // 💡 เก็บข้อมูล productionDate เพื่อใช้ในการ Sort และ Display ในตารางปัญหาและสถานะ
                 statusGroups[planStatus].push({
                     productionDateDisplay: displayDate,
                     productionDateSort: sortDateStr,
@@ -1634,7 +1680,6 @@
             document.getElementById('kpiWorkDays').innerHTML = `${totalWorkingDays} <span class="text-base font-normal text-slate-400">วัน</span>`;
             document.getElementById('kpiOT').innerHTML = `${(totalOTMinutes / 60).toFixed(1)} <span class="text-base font-normal text-slate-400">ชม.</span>`;
 
-            // 💡 5.1 อัปเดตการ์ด Actual vs Capacity แยกตามไลน์
             const actualVsCapContainer = document.getElementById('actualVsCapCardsContainer');
             if (Object.keys(lineDict).length === 0) {
                 actualVsCapContainer.innerHTML = `<div class="text-sm text-slate-500 italic py-2">ไม่มีข้อมูลตามช่วงเวลาที่เลือก</div>`;
@@ -1688,7 +1733,6 @@
                 actualVsCapContainer.innerHTML = actHtml;
             }
 
-            // 💡 5.2 อัปเดตการ์ด OEE แยกตามไลน์ผลิต
             const lineKpisContainer = document.getElementById('lineKpisContainer');
             if (Object.keys(lineDict).length === 0) {
                 lineKpisContainer.innerHTML = `<div class="text-sm text-slate-500 italic py-2">ไม่มีข้อมูลไลน์ผลิตตามช่วงเวลาที่เลือก</div>`;
@@ -1776,7 +1820,6 @@
                 lineKpisContainer.innerHTML = htmlOut;
             }
 
-            // 💡 5.3 อัปเดตการ์ด อัตราการผลิตทะลุเป้า (Push Beyond Max Cap)
             const pushMaxCapContainer = document.getElementById('pushMaxCapContainer');
             if (Object.keys(lineDict).length === 0) {
                 pushMaxCapContainer.innerHTML = `<div class="text-sm text-slate-500 italic py-2">ไม่มีข้อมูลตามช่วงเวลาที่เลือก</div>`;
@@ -1885,7 +1928,6 @@
                 pushMaxCapContainer.innerHTML = pushHtml;
             }
 
-            // 💡 5.4 อัปเดตกราฟแนวโน้มผลผลิตรายวันเทียบเป้าสูงสุด
             if (dailyPushTrendChartInstance) {
                 const allActiveDates = new Set();
                 Object.keys(lineDailyCapTracker).forEach(line => {
@@ -1945,7 +1987,40 @@
                 dailyPushTrendChartInstance.update();
             }
 
-            // 6. อัปเดตกรา Chart อื่นๆ 
+            // 💡 6. อัปเดตกราฟ Machine Chart และกราฟ 🚀 Variance ใหม่
+            if (varianceChartInstance) {
+                const sortedLinesVar = Object.keys(lineYieldData).sort((a,b) => {
+                    const varA = lineYieldData[a].totalProd - lineYieldData[a].totalOrder;
+                    const varB = lineYieldData[b].totalProd - lineYieldData[b].totalOrder;
+                    return varB - varA; // Highest over-production first
+                });
+                
+                const varData = sortedLinesVar.map(line => {
+                    return lineYieldData[line].totalProd - lineYieldData[line].totalOrder;
+                });
+                
+                const varColors = varData.map(val => {
+                    if (val > 0) return 'rgba(245, 158, 11, 0.8)'; // Amber for Over
+                    if (val < 0) return 'rgba(239, 68, 68, 0.8)'; // Red for Under
+                    return 'rgba(16, 185, 129, 0.8)'; // Green for perfect
+                });
+                const varHoverColors = varData.map(val => {
+                    if (val > 0) return 'rgba(217, 119, 6, 1)'; 
+                    if (val < 0) return 'rgba(220, 38, 38, 1)'; 
+                    return 'rgba(5, 150, 105, 1)'; 
+                });
+
+                varianceChartInstance.data.labels = sortedLinesVar;
+                varianceChartInstance.data.datasets = [{
+                    label: 'Variance',
+                    data: varData,
+                    backgroundColor: varColors,
+                    hoverBackgroundColor: varHoverColors,
+                    borderRadius: 4
+                }];
+                varianceChartInstance.update();
+            }
+
             if (machineChartInstance) {
                 window.currentLineMetrics = {}; 
                 const sortedLines = Object.keys(lineDict).sort((a,b) => lineDict[b] - lineDict[a]).slice(0, 7);
@@ -2102,7 +2177,6 @@
                 mediaContainer.innerHTML = mediaHtml;
             }
 
-            // 💡 5.5 อัปเดตตารางสถานะการผลิต
             const statusContainer = document.getElementById('statusBreakdownContainer');
             if (rawData.length === 0) {
                 statusContainer.innerHTML = `<div class="text-center text-slate-500 py-10 font-medium">ยังไม่มีข้อมูล 📊</div>`;
@@ -2450,12 +2524,7 @@
                     rawData = rawJson;
                     populateDropdowns(rawData); 
                     showAlert('อัปโหลดสำเร็จ!', `ประมวลผลข้อมูลเรียบร้อยแล้ว\nจำนวนรายการข้อมูลทั้งหมด: ${rawData.length.toLocaleString()} รายการ`, 'success');
-                    
-                    // Reset Checkbox States
-                    Object.keys(window.filterState).forEach(k => window.filterState[k] = []);
-                    document.getElementById('filterItem').value = '';
-                    
-                    updateDashboard(); 
+                    resetFilters(); 
                 } else {
                     showAlert('แจ้งเตือน', 'ไม่พบข้อมูลในไฟล์ Excel ที่อัปโหลด', 'info');
                 }
