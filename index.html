@@ -1454,6 +1454,8 @@
                 const dateVal = getColValue(row, 'PRODUCTION_DATE') || '';
                 const { y: rowYear, m: rowMonth, d: rowDay } = extractDateParts(dateVal);
                 const normalizedDate = (rowYear && rowMonth && rowDay) ? `${rowYear}-${rowMonth}-${rowDay}` : null;
+                const displayDate = (rowYear && rowMonth && rowDay) ? `${rowDay}/${rowMonth}/${rowYear}` : '-'; // 💡 สำหรับใช้แสดงผลวันที่ผลิต
+                const sortDateStr = normalizedDate || '9999-99-99'; // 💡 สำหรับใช้เรียงลำดับ
 
                 let rawMac = getColValue(row, 'MAC');
                 const macVal = (rawMac != null && String(rawMac).trim() !== '') ? String(rawMac).trim() : 'ไม่ระบุ MAC';
@@ -1608,7 +1610,10 @@
                 const planStatus = getColValue(row, 'PLAN_STATUS') || 'ไม่ระบุสถานะ';
                 if (!statusGroups[planStatus]) statusGroups[planStatus] = [];
                 
+                // 💡 เก็บข้อมูล productionDate เพื่อใช้ในการ Sort และ Display ในตารางปัญหาและสถานะ
                 statusGroups[planStatus].push({
+                    productionDateDisplay: displayDate,
+                    productionDateSort: sortDateStr,
                     orderNo: getColValue(row, 'ชื่อเรื่อง') || getColValue(row, 'ORDER_NO') || '-',
                     itemCode: getColValue(row, 'ITEM CODE') || getColValue(row, 'ITEM_CODE') || '-',
                     itemName: getColValue(row, 'ITEM_NAME') || '-',
@@ -1785,11 +1790,9 @@
                     let otActiveDays = 0;
                     let otExceedDays = 0;
                     
-                    // 💡 เพิ่ม Array สำหรับเก็บวันที่ทะลุเป้า
                     let nonOtExceedDateList = [];
                     let otExceedDateList = [];
 
-                    // 💡 ดึง Batch Cap ของ Line นี้มาใช้เป็นเกณฑ์
                     const lineStdCap = LINE_STD_BATCH_CAP[line] || 0;
 
                     if (lineActiveDays[line]) {
@@ -1799,20 +1802,16 @@
                             const dailyOT = (lineDailyOTTracker[line] && lineDailyOTTracker[line][dateStr]) ? lineDailyOTTracker[line][dateStr] : 0;
 
                             if (dailyCap > 0) {
-                                // ปัดเศษทศนิยมเพื่อป้องกันปัญหา Floating Point Error
                                 const safeCap = Math.round(dailyCap * 100) / 100;
                                 const safeActual = Math.round(dailyActual * 100) / 100;
                                 
-                                // 💡 คำนวณเกณฑ์ทะลุเป้าใหม่: ต้องมากกว่าหรือเท่ากับ Max Cap + 1 Batch Cap
                                 const exceedThreshold = Math.round((safeCap + lineStdCap) * 100) / 100;
                                 
-                                // แปลงวันที่ให้อ่านง่าย (DD/MM/YY)
                                 const parts = dateStr.split('-');
                                 const displayDate = `${parts[2]}/${parts[1]}/${parts[0].substring(2)}`;
 
                                 if (dailyOT === 0) {
                                     nonOtActiveDays++;
-                                    // ถ้ายอดจริงมากกว่าเกณฑ์ที่ตั้ง (หรือกรณีไม่ได้ระบุ std cap ก็ให้ใช้ safeActual > safeCap ปกติ)
                                     if ((safeActual >= exceedThreshold && lineStdCap > 0) || (lineStdCap === 0 && safeActual > safeCap)) {
                                         nonOtExceedDays++;
                                         nonOtExceedDateList.push(displayDate);
@@ -1839,7 +1838,6 @@
                     else if (exceedPct >= 20) { textColor = 'text-amber-700 bg-amber-100'; borderColor = 'border-amber-200 hover:border-amber-400'; icon = '⭐'; }
                     else if (exceedPct > 0) { textColor = 'text-emerald-700 bg-emerald-100'; borderColor = 'border-emerald-200 hover:border-emerald-400'; icon = '📈'; }
 
-                    // 💡 สร้าง HTML ของรายการวันที่ ถ้ามีวันที่ทะลุเป้า
                     const nonOtDatesHtml = nonOtExceedDateList.length > 0 
                         ? `<div class="text-[9px] text-emerald-600 mt-1.5 max-h-12 overflow-y-auto custom-scrollbar tracking-tight leading-snug break-words"><b>วันที่:</b> ${nonOtExceedDateList.join(', ')}</div>` 
                         : '';
@@ -2104,6 +2102,7 @@
                 mediaContainer.innerHTML = mediaHtml;
             }
 
+            // 💡 5.5 อัปเดตตารางสถานะการผลิต
             const statusContainer = document.getElementById('statusBreakdownContainer');
             if (rawData.length === 0) {
                 statusContainer.innerHTML = `<div class="text-center text-slate-500 py-10 font-medium">ยังไม่มีข้อมูล 📊</div>`;
@@ -2112,8 +2111,17 @@
             } else {
                 let htmlContent = '';
                 for (const [statusName, items] of Object.entries(statusGroups)) {
+                    
+                    // 💡 เรียงลำดับรายการแบทช์ตามวันที่ผลิต จากเก่าไปใหม่
+                    items.sort((a, b) => {
+                        if (a.productionDateSort < b.productionDateSort) return -1;
+                        if (a.productionDateSort > b.productionDateSort) return 1;
+                        return 0;
+                    });
+
                     let tableRows = items.map(item => `
                         <tr class="border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                            <td class="py-2.5 px-4 text-slate-600">${item.productionDateDisplay}</td>
                             <td class="py-2.5 px-4 text-blue-600 font-semibold">${item.orderNo}</td>
                             <td class="py-2.5 px-4 text-slate-600">${item.itemCode}</td>
                             <td class="py-2.5 px-4 text-slate-700 truncate max-w-xs" title="${item.itemName}">${item.itemName}</td>
@@ -2135,6 +2143,7 @@
                                 <table class="w-full text-left text-sm whitespace-nowrap">
                                     <thead class="bg-white text-slate-500">
                                         <tr>
+                                            <th class="py-2.5 px-4 font-medium border-b border-slate-100">Production Date</th>
                                             <th class="py-2.5 px-4 font-medium border-b border-slate-100">Order No (แบทช์)</th>
                                             <th class="py-2.5 px-4 font-medium border-b border-slate-100">Item Code</th>
                                             <th class="py-2.5 px-4 font-medium border-b border-slate-100">Item Name</th>
